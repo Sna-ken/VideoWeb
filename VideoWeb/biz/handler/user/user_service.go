@@ -4,8 +4,14 @@ package user
 
 import (
 	"context"
+	"time"
 
 	user "github.com/Sna-ken/videoweb/biz/model/user"
+	service "github.com/Sna-ken/videoweb/biz/service/user"
+	"github.com/Sna-ken/videoweb/config"
+	"github.com/Sna-ken/videoweb/internal/dao"
+	"github.com/Sna-ken/videoweb/pkg/jwt"
+	"github.com/Sna-ken/videoweb/pkg/utils"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
@@ -23,9 +29,17 @@ func Register(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(user.RegisterResp)
+	userService := service.NewUserService(ctx)
 
-	c.JSON(consts.StatusOK, resp)
+	if err := userService.RegisterService(&req); err != nil {
+		c.JSON(consts.StatusInternalServerError, &user.RegisterResp{
+			Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Register failed:" + err.Error()},
+		})
+	}
+
+	c.JSON(consts.StatusOK, &user.RegisterResp{
+		Base: &user.Base{Code: consts.StatusOK, Msg: "User register successfully"},
+	})
 }
 
 // Login .
@@ -35,13 +49,66 @@ func Login(ctx context.Context, c *app.RequestContext) {
 	var req user.LoginReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusBadRequest, &user.LoginResp{
+			Base: &user.Base{},
+		})
 		return
 	}
 
-	resp := new(user.LoginResp)
+	var _user dao.User
 
-	c.JSON(consts.StatusOK, resp)
+	if err := config.MYSQLDB.Where("username = ?", req.Username).Find(&_user).Error; err != nil {
+		c.JSON(consts.StatusUnauthorized, &user.LoginResp{
+			Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "User not exist"},
+		})
+		return
+	}
+
+	if !utils.CheckPasswordHash(req.Password, _user.Password) {
+		c.JSON(consts.StatusUnauthorized, &user.LoginResp{
+			Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "Wrong password"},
+		})
+		return
+	}
+
+	accesstoken, err := jwt.GenerateAccessToken(_user.ID)
+	if err != nil {
+		c.JSON(consts.StatusInternalServerError, user.LoginResp{
+			Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Generate accesstoken failed:" + err.Error()},
+		})
+		return
+	}
+
+	refreshtoken, err := jwt.GenerateRefreshToken(_user.ID)
+	if err != nil {
+		c.JSON(consts.StatusInternalServerError, user.LoginResp{
+			Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Generate refreshtoken failed:" + err.Error()},
+		})
+		return
+	}
+
+	duration := time.Duration(config.JWTConfig.RefreshTokenExpiry) * time.Second
+	err = config.REDISDB.Set(ctx, "refresh_token"+_user.ID, refreshtoken, duration).Err()
+	if err != nil {
+		c.JSON(consts.StatusInternalServerError, user.LoginResp{
+			Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Redis error"},
+		})
+		return
+	}
+
+	c.JSON(consts.StatusOK, user.LoginResp{
+		Base: &user.Base{Code: consts.StatusOK, Msg: "User login successfully"},
+		Data: &user.Data{
+			UserID:    _user.ID,
+			Username:  _user.Username,
+			AvatarURL: _user.Avatar_url,
+			CreatedAt: _user.Create_at.Format("2006-01-02 15:04:05"),
+			UpdatedAt: _user.Update_at.Format("2006-01-02 15:04:05"),
+			DeletedAt: _user.Delete_at.Format("2006-01-02 15:04:05"),
+		},
+		AccessToken:  accesstoken,
+		RefreshToken: refreshtoken,
+	})
 }
 
 // UserInfo .
@@ -67,11 +134,13 @@ func UploadAvatar(ctx context.Context, c *app.RequestContext) {
 	var req user.UploadAvatarReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusBadRequest, &user.UploadAvatarResp{
+			Base: &user.Base{Code: consts.StatusBadRequest, Msg: "Invalid input:" + err.Error()},
+		})
 		return
 	}
 
-	resp := new(user.UploadAvatarResp)
-
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(consts.StatusOK, &user.UploadAvatarResp{
+		Base: &user.Base{Code: consts.StatusOK},
+	})
 }

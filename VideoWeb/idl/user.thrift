@@ -28,7 +28,6 @@ struct RegisterResp{
 struct LoginReq{
     1:string username(api.form="username"),
     2:string password(api.form="password"),
-    3:i32 code,
 }
 
 struct LoginResp{

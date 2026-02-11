@@ -6,6 +6,7 @@ require (
 	github.com/apache/thrift v0.13.0
 	github.com/cloudwego/hertz v0.10.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.17.3
 	golang.org/x/crypto v0.48.0
 	gorm.io/driver/mysql v1.6.0

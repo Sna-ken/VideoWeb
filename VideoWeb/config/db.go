@@ -22,6 +22,6 @@ var Redis = struct {
 }{
 	HOST:     "127.0.0.1",
 	PORT:     "6379",
-	PASSWORD: "Aa133944",
+	PASSWORD: "",
 	DB:       0,
 }

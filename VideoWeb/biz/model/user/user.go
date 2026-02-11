@@ -5,6 +5,7 @@ package user
 import (
 	"context"
 	"fmt"
+
 	"github.com/apache/thrift/lib/go/thrift"
 )
 
@@ -902,7 +903,6 @@ func (p *RegisterResp) String() string {
 type LoginReq struct {
 	Username string `thrift:"username,1" form:"username" json:"username"`
 	Password string `thrift:"password,2" form:"password" json:"password"`
-	Code     int32  `thrift:"code,3" form:"code" json:"code" query:"code"`
 }
 
 func NewLoginReq() *LoginReq {
@@ -920,14 +920,9 @@ func (p *LoginReq) GetPassword() (v string) {
 	return p.Password
 }
 
-func (p *LoginReq) GetCode() (v int32) {
-	return p.Code
-}
-
 var fieldIDToName_LoginReq = map[int16]string{
 	1: "username",
 	2: "password",
-	3: "code",
 }
 
 func (p *LoginReq) Read(iprot thrift.TProtocol) (err error) {
@@ -960,14 +955,6 @@ func (p *LoginReq) Read(iprot thrift.TProtocol) (err error) {
 		case 2:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField2(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 3:
-			if fieldTypeId == thrift.I32 {
-				if err = p.ReadField3(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -1024,17 +1011,6 @@ func (p *LoginReq) ReadField2(iprot thrift.TProtocol) error {
 	p.Password = _field
 	return nil
 }
-func (p *LoginReq) ReadField3(iprot thrift.TProtocol) error {
-
-	var _field int32
-	if v, err := iprot.ReadI32(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.Code = _field
-	return nil
-}
 
 func (p *LoginReq) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -1048,10 +1024,6 @@ func (p *LoginReq) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField2(oprot); err != nil {
 			fieldId = 2
-			goto WriteFieldError
-		}
-		if err = p.writeField3(oprot); err != nil {
-			fieldId = 3
 			goto WriteFieldError
 		}
 	}
@@ -1104,23 +1076,6 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
-}
-
-func (p *LoginReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("code", thrift.I32, 3); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteI32(p.Code); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
 }
 
 func (p *LoginReq) String() string {

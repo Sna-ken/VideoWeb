@@ -43,3 +43,15 @@ func InitRedis() {
 	REDISDB = DBtemp
 	log.Println("Connected to Redis")
 }
+
+var JWTConfig = struct {
+	AccessTokenSecret  string
+	RefreshTokenSecret string
+	AccessTokenExpiry  int64 // 秒为单位
+	RefreshTokenExpiry int64
+}{
+	AccessTokenSecret:  "your-access-token-secret-key",
+	RefreshTokenSecret: "your-refresh-token-secret-key",
+	AccessTokenExpiry:  180,    // 30分钟
+	RefreshTokenExpiry: 604800, // 7天
+}
