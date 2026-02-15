@@ -26,5 +26,7 @@ func main() {
 
 	h.StaticFS("/static", &app.FS{Root: "./", GenerateIndexPages: true}) //root不要设置成./static T-T
 	h.POST("/user/register", user.Register)
+	h.POST("/user/login", user.Login)
+
 	h.Spin()
 }

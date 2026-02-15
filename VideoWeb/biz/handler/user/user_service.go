@@ -4,14 +4,11 @@ package user
 
 import (
 	"context"
-	"time"
+	"errors"
 
 	user "github.com/Sna-ken/videoweb/biz/model/user"
 	service "github.com/Sna-ken/videoweb/biz/service/user"
-	"github.com/Sna-ken/videoweb/config"
-	"github.com/Sna-ken/videoweb/internal/dao"
-	"github.com/Sna-ken/videoweb/pkg/jwt"
-	"github.com/Sna-ken/videoweb/pkg/utils"
+	"github.com/Sna-ken/videoweb/pkg/e"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
@@ -32,9 +29,22 @@ func Register(ctx context.Context, c *app.RequestContext) {
 	userService := service.NewUserService(ctx)
 
 	if err := userService.RegisterService(&req); err != nil {
-		c.JSON(consts.StatusInternalServerError, &user.RegisterResp{
-			Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Register failed:" + err.Error()},
-		})
+		switch {
+		case errors.Is(err, e.ErrHasedPassword):
+			c.JSON(consts.StatusInternalServerError, &user.RegisterResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Register failed:" + err.Error()},
+			})
+
+		case errors.Is(err, e.ErrUserHasExisted):
+			c.JSON(consts.StatusInternalServerError, &user.RegisterResp{
+				Base: &user.Base{Code: consts.StatusConflict, Msg: "Register failed:" + err.Error()},
+			})
+
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &user.RegisterResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Register failed:" + err.Error()},
+			})
+		}
 	}
 
 	c.JSON(consts.StatusOK, &user.RegisterResp{
@@ -55,60 +65,35 @@ func Login(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	var _user dao.User
+	userService := service.NewUserService(ctx)
 
-	if err := config.MYSQLDB.Where("username = ?", req.Username).Find(&_user).Error; err != nil {
-		c.JSON(consts.StatusUnauthorized, &user.LoginResp{
-			Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "User not exist"},
-		})
-		return
-	}
+	err, resp := userService.LoginService(&req)
 
-	if !utils.CheckPasswordHash(req.Password, _user.Password) {
-		c.JSON(consts.StatusUnauthorized, &user.LoginResp{
-			Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "Wrong password"},
-		})
-		return
-	}
-
-	accesstoken, err := jwt.GenerateAccessToken(_user.ID)
 	if err != nil {
-		c.JSON(consts.StatusInternalServerError, user.LoginResp{
-			Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Generate accesstoken failed:" + err.Error()},
-		})
-		return
+		switch {
+		case errors.Is(err, e.ErrUserNotFound):
+			c.JSON(consts.StatusInternalServerError, &user.LoginResp{
+				Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "Login failed:" + err.Error()},
+			})
+
+		case errors.Is(err, e.ErrWrongPassword):
+			c.JSON(consts.StatusInternalServerError, &user.LoginResp{
+				Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "Login failed:" + err.Error()},
+			})
+
+		case errors.Is(err, e.ErrGenerateToken):
+			c.JSON(consts.StatusInternalServerError, &user.LoginResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Login failed:" + err.Error()},
+			})
+
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &user.LoginResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Login failed:" + err.Error()},
+			})
+		}
 	}
 
-	refreshtoken, err := jwt.GenerateRefreshToken(_user.ID)
-	if err != nil {
-		c.JSON(consts.StatusInternalServerError, user.LoginResp{
-			Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Generate refreshtoken failed:" + err.Error()},
-		})
-		return
-	}
-
-	duration := time.Duration(config.JWTConfig.RefreshTokenExpiry) * time.Second
-	err = config.REDISDB.Set(ctx, "refresh_token"+_user.ID, refreshtoken, duration).Err()
-	if err != nil {
-		c.JSON(consts.StatusInternalServerError, user.LoginResp{
-			Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Redis error"},
-		})
-		return
-	}
-
-	c.JSON(consts.StatusOK, user.LoginResp{
-		Base: &user.Base{Code: consts.StatusOK, Msg: "User login successfully"},
-		Data: &user.Data{
-			UserID:    _user.ID,
-			Username:  _user.Username,
-			AvatarURL: _user.Avatar_url,
-			CreatedAt: _user.Create_at.Format("2006-01-02 15:04:05"),
-			UpdatedAt: _user.Update_at.Format("2006-01-02 15:04:05"),
-			DeletedAt: _user.Delete_at.Format("2006-01-02 15:04:05"),
-		},
-		AccessToken:  accesstoken,
-		RefreshToken: refreshtoken,
-	})
+	c.JSON(consts.StatusOK, resp)
 }
 
 // UserInfo .
