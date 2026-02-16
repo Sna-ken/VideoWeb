@@ -81,7 +81,7 @@ func (s *UserService) LoginService(req *user.LoginReq) (error, *user.LoginResp) 
 
 	deletedAtStr := ""
 	if _user.Delete_at != nil {
-		deletedAtStr = _user.Delete_at.Format("2006-01-02 15:04:05")
+		deletedAtStr = _user.Delete_at.Format(time.DateTime)
 	}
 
 	return nil, &user.LoginResp{
@@ -90,8 +90,8 @@ func (s *UserService) LoginService(req *user.LoginReq) (error, *user.LoginResp) 
 			UserID:    _user.ID,
 			Username:  _user.Username,
 			AvatarURL: _user.Avatar_url,
-			CreatedAt: _user.Create_at.Format("2006-01-02 15:04:05"),
-			UpdatedAt: _user.Update_at.Format("2006-01-02 15:04:05"),
+			CreatedAt: _user.Create_at.Format(time.DateTime),
+			UpdatedAt: _user.Update_at.Format(time.DateTime),
 			DeletedAt: deletedAtStr, //没删除用户指针为nil,直接调用Format会Panic
 		},
 		AccessToken:  accesstoken,

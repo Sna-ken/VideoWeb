@@ -70,7 +70,7 @@ func ValidateAccessToken(tokenString string) (*Claims, error) {
 	return cllaims, nil
 }
 
-func ValidateToken(tokenString string) (*Claims, error) {
+func ValidateRefreshToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
