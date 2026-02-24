@@ -9,4 +9,5 @@ var (
 	ErrUserNotFound   = errors.New("user not found")
 	ErrWrongPassword  = errors.New("wrong password")
 	ErrGenerateToken  = errors.New("generate token failed")
+	ErrUserIDNotFound = errors.New("user ID not found")
 )

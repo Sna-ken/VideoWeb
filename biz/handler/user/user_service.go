@@ -60,7 +60,7 @@ func Login(ctx context.Context, c *app.RequestContext) {
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		c.JSON(consts.StatusBadRequest, &user.LoginResp{
-			Base: &user.Base{},
+			Base: &user.Base{Code: consts.StatusBadRequest, Msg: "Invalid input:" + err.Error()},
 		})
 		return
 	}
@@ -103,11 +103,29 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	var req user.UserInfoReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusBadRequest, &user.LoginResp{
+			Base: &user.Base{Code: consts.StatusBadRequest, Msg: "Invalid input:" + err.Error()},
+		})
 		return
 	}
 
-	resp := new(user.UserInfoResp)
+	userService := service.NewUserService(ctx)
+	userID := c.GetString("user_id")
+	err, resp := userService.UserInfoService(&req, userID)
+	switch {
+	case errors.Is(err, e.ErrUserIDNotFound):
+		{
+			c.JSON(consts.StatusUnauthorized, &user.Base{Code: consts.StatusUnauthorized, Msg: "fetch user info failed:" + err.Error()})
+		}
+	case errors.Is(err, e.ErrUserNotFound):
+		{
+			c.JSON(consts.StatusUnauthorized, &user.Base{Code: consts.StatusUnauthorized, Msg: "fetch user info failed:" + err.Error()})
+		}
+	case errors.Is(err, e.ErrDB):
+		{
+			c.JSON(consts.StatusInternalServerError, &user.Base{Code: consts.StatusInternalServerError, Msg: "fetch user info failed:" + err.Error()})
+		}
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }

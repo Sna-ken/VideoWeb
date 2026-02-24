@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/Sna-ken/videoweb/biz/model/user"
@@ -48,9 +49,17 @@ func JWTAuth() app.HandlerFunc {
 		}
 
 		val, err := config.REDISDB.Get(ctx, "user_rftoken:"+rfClaims.UserID).Result()
-		if err != nil || val != refreshtoken {
+		if err != nil {
 			c.JSON(consts.StatusUnauthorized, &user.Base{
-				Code: consts.StatusUnauthorized, Msg: "session invalid",
+				Code: consts.StatusUnauthorized, Msg: "session invalid:" + err.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		if val != refreshtoken {
+			c.JSON(consts.StatusUnauthorized, &user.Base{
+				Code: consts.StatusUnauthorized, Msg: "session invalid: token mismatch",
 			})
 			c.Abort()
 			return
@@ -60,14 +69,19 @@ func JWTAuth() app.HandlerFunc {
 		newRefreshtoken, errR := jwt.GenerateRefreshToken(rfClaims.UserID)
 		if errA != nil || errR != nil {
 			c.JSON(consts.StatusInternalServerError, &user.Base{
-				Code: consts.StatusInternalServerError, Msg: "genrate token failed",
+				Code: consts.StatusInternalServerError, Msg: "genrate token failed" + errA.Error() + " " + errR.Error(),
 			})
 			c.Abort()
 			return
 		}
 
 		duration := time.Duration(config.JWTConfig.RefreshTokenExpiry) * time.Second
-		config.REDISDB.Set(ctx, "user_rftoken:"+rfClaims.UserID, newRefreshtoken, duration)
+		err = config.REDISDB.Set(ctx, "user_rftoken:"+rfClaims.UserID, newRefreshtoken, duration).Err()
+		if err != nil {
+			log.Println("Failed to save refresh token to Redis:", err)
+		} else {
+			log.Println("Successfully saved Redis key:", "user_rftoken:"+rfClaims.UserID)
+		}
 
 		c.Header("new_access_token", newAccesstoken)
 		c.Header("new_refresh_token", newRefreshtoken)

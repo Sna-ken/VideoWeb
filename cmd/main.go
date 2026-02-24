@@ -6,6 +6,7 @@ import (
 	"github.com/Sna-ken/videoweb/biz/handler/user"
 	"github.com/Sna-ken/videoweb/config"
 	"github.com/Sna-ken/videoweb/internal/dao"
+	"github.com/Sna-ken/videoweb/middleware"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
@@ -27,6 +28,7 @@ func main() {
 	h.StaticFS("/static", &app.FS{Root: "./", GenerateIndexPages: true}) //root不要设置成./static T-T
 	h.POST("/user/register", user.Register)
 	h.POST("/user/login", user.Login)
+	h.GET("/user/info", middleware.JWTAuth(), user.UserInfo)
 
 	h.Spin()
 }

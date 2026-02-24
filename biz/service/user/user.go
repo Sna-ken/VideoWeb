@@ -33,7 +33,7 @@ func (s *UserService) RegisterService(req *user.RegisterReq) error {
 	}
 	req.Password = hashedPassword
 
-	if err := dao.FindUser(s.ctx, &tempUser, req.Username); err == nil {
+	if err := dao.FindUserByName(s.ctx, &tempUser, req.Username); err == nil {
 		return e.ErrUserHasExisted
 	} //先通过校检再初始化，FindUser和CreateUser不要重复使用同样的变量
 
@@ -56,7 +56,7 @@ func (s *UserService) RegisterService(req *user.RegisterReq) error {
 func (s *UserService) LoginService(req *user.LoginReq) (error, *user.LoginResp) {
 	var _user dao.User
 
-	if err := dao.FindUser(s.ctx, &_user, req.Username); err == gorm.ErrRecordNotFound {
+	if err := dao.FindUserByName(s.ctx, &_user, req.Username); err == gorm.ErrRecordNotFound {
 		return e.ErrUserNotFound, nil
 	}
 
@@ -96,5 +96,39 @@ func (s *UserService) LoginService(req *user.LoginReq) (error, *user.LoginResp) 
 		},
 		AccessToken:  accesstoken,
 		RefreshToken: refreshtoken,
+	}
+}
+
+func (s *UserService) UserInfoService(req *user.UserInfoReq, userID string) (error, *user.UserInfoResp) {
+	if userID == "" {
+		return e.ErrUserIDNotFound, nil
+	}
+
+	var _user dao.User
+	if err := dao.FindUserByID(s.ctx, &_user, userID); err != nil {
+		if err.Error() == "record not found" {
+			return e.ErrUserNotFound, nil
+		}
+		return e.ErrDB, nil
+	}
+
+	deletedAtStr := ""
+	if _user.Delete_at != nil {
+		deletedAtStr = _user.Delete_at.Format(time.DateTime)
+	}
+
+	return nil, &user.UserInfoResp{
+		Base: &user.Base{
+			Code: consts.StatusOK,
+			Msg:  "user info fetched successfully",
+		},
+		Data: &user.Data{
+			UserID:    _user.ID,
+			Username:  _user.Username,
+			AvatarURL: _user.Avatar_url,
+			CreatedAt: _user.Create_at.Format(time.DateTime),
+			UpdatedAt: _user.Update_at.Format(time.DateTime),
+			DeletedAt: deletedAtStr,
+		},
 	}
 }
