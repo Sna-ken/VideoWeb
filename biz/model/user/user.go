@@ -5,7 +5,6 @@ package user
 import (
 	"context"
 	"fmt"
-
 	"github.com/apache/thrift/lib/go/thrift"
 )
 
@@ -1809,7 +1808,7 @@ func (p *UserInfoResp) String() string {
 type UploadAvatarReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	Avatar       []byte `thrift:"avatar,3" form:"avatar" json:"avatar"`
+	Avatar       []byte `thrift:"avatar,3" form:"avatar" json:"avatar" query:"avatar"`
 }
 
 func NewUploadAvatarReq() *UploadAvatarReq {
@@ -2040,7 +2039,6 @@ func (p *UploadAvatarReq) String() string {
 
 type UploadAvatarResp struct {
 	Base *Base `thrift:"base,1" form:"base" json:"base" query:"base"`
-	Data *Data `thrift:"data,2" form:"data" json:"data" query:"data"`
 }
 
 func NewUploadAvatarResp() *UploadAvatarResp {
@@ -2059,26 +2057,12 @@ func (p *UploadAvatarResp) GetBase() (v *Base) {
 	return p.Base
 }
 
-var UploadAvatarResp_Data_DEFAULT *Data
-
-func (p *UploadAvatarResp) GetData() (v *Data) {
-	if !p.IsSetData() {
-		return UploadAvatarResp_Data_DEFAULT
-	}
-	return p.Data
-}
-
 var fieldIDToName_UploadAvatarResp = map[int16]string{
 	1: "base",
-	2: "data",
 }
 
 func (p *UploadAvatarResp) IsSetBase() bool {
 	return p.Base != nil
-}
-
-func (p *UploadAvatarResp) IsSetData() bool {
-	return p.Data != nil
 }
 
 func (p *UploadAvatarResp) Read(iprot thrift.TProtocol) (err error) {
@@ -2103,14 +2087,6 @@ func (p *UploadAvatarResp) Read(iprot thrift.TProtocol) (err error) {
 		case 1:
 			if fieldTypeId == thrift.STRUCT {
 				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 2:
-			if fieldTypeId == thrift.STRUCT {
-				if err = p.ReadField2(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -2153,14 +2129,6 @@ func (p *UploadAvatarResp) ReadField1(iprot thrift.TProtocol) error {
 	p.Base = _field
 	return nil
 }
-func (p *UploadAvatarResp) ReadField2(iprot thrift.TProtocol) error {
-	_field := NewData()
-	if err := _field.Read(iprot); err != nil {
-		return err
-	}
-	p.Data = _field
-	return nil
-}
 
 func (p *UploadAvatarResp) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -2170,10 +2138,6 @@ func (p *UploadAvatarResp) Write(oprot thrift.TProtocol) (err error) {
 	if p != nil {
 		if err = p.writeField1(oprot); err != nil {
 			fieldId = 1
-			goto WriteFieldError
-		}
-		if err = p.writeField2(oprot); err != nil {
-			fieldId = 2
 			goto WriteFieldError
 		}
 	}
@@ -2209,23 +2173,6 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *UploadAvatarResp) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("data", thrift.STRUCT, 2); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := p.Data.Write(oprot); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
 }
 
 func (p *UploadAvatarResp) String() string {

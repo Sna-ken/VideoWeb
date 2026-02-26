@@ -51,17 +51,16 @@ struct UserInfoResp{
 struct UploadAvatarReq{
    1:string access_token(api.header="access_token"),
    2:string refresh_token(api.header="refresh_token"),
-   3:binary avatar(api.form="avatar"),
+   3:binary avatar(api.file="avatar"),
 }
 
 struct UploadAvatarResp{
    1:Base base,
-   2:Data data,
 }
 
 service UserService{
     RegisterResp Register(1:RegisterReq req)(api.post="/user/register")
     LoginResp Login(1:LoginReq req)(api.post="/user/login")
     UserInfoResp UserInfo(1:UserInfoReq req)(api.get="/user/info")
-    UploadAvatarResp UploadAvatar(1:UploadAvatarReq req)(api.put="/user/avatar/upload" )
+    UploadAvatarResp UploadAvatar(1:UploadAvatarReq req)(api.post="/user/avatar" )
 }

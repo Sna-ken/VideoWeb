@@ -132,3 +132,32 @@ func (s *UserService) UserInfoService(req *user.UserInfoReq, userID string) (err
 		},
 	}
 }
+
+func (s *UserService) UploadAvatarService(req *user.UploadAvatarReq, userID string) error {
+	if userID == "" {
+		return e.ErrUserIDNotFound
+	}
+
+	if len(req.Avatar) == 0 {
+		return e.ErrFileRequired
+	}
+
+	var _user dao.User
+	if err := dao.FindUserByID(s.ctx, &_user, userID); err != nil {
+		if err.Error() == "record not found" {
+			return e.ErrUserNotFound
+		}
+		return e.ErrDB
+	}
+
+	avatarURL, err := utils.StoreAvatar(req.Avatar, userID)
+	if err != nil {
+		return e.ErrFileSaveFailed
+	}
+
+	if err := dao.UpdateUserAvatar(s.ctx, userID, avatarURL); err != nil {
+		return e.ErrDB
+	}
+
+	return nil
+}

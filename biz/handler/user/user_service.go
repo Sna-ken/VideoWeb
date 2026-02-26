@@ -34,16 +34,19 @@ func Register(ctx context.Context, c *app.RequestContext) {
 			c.JSON(consts.StatusInternalServerError, &user.RegisterResp{
 				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Register failed:" + err.Error()},
 			})
+			return
 
 		case errors.Is(err, e.ErrUserHasExisted):
-			c.JSON(consts.StatusInternalServerError, &user.RegisterResp{
+			c.JSON(consts.StatusConflict, &user.RegisterResp{
 				Base: &user.Base{Code: consts.StatusConflict, Msg: "Register failed:" + err.Error()},
 			})
+			return
 
 		case errors.Is(err, e.ErrDB):
 			c.JSON(consts.StatusInternalServerError, &user.RegisterResp{
 				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Register failed:" + err.Error()},
 			})
+			return
 		}
 	}
 
@@ -72,24 +75,28 @@ func Login(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		switch {
 		case errors.Is(err, e.ErrUserNotFound):
-			c.JSON(consts.StatusInternalServerError, &user.LoginResp{
+			c.JSON(consts.StatusUnauthorized, &user.LoginResp{
 				Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "Login failed:" + err.Error()},
 			})
+			return
 
 		case errors.Is(err, e.ErrWrongPassword):
-			c.JSON(consts.StatusInternalServerError, &user.LoginResp{
+			c.JSON(consts.StatusUnauthorized, &user.LoginResp{
 				Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "Login failed:" + err.Error()},
 			})
+			return
 
 		case errors.Is(err, e.ErrGenerateToken):
 			c.JSON(consts.StatusInternalServerError, &user.LoginResp{
 				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Login failed:" + err.Error()},
 			})
+			return
 
 		case errors.Is(err, e.ErrDB):
 			c.JSON(consts.StatusInternalServerError, &user.LoginResp{
 				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Login failed:" + err.Error()},
 			})
+			return
 		}
 	}
 
@@ -103,7 +110,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	var req user.UserInfoReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.JSON(consts.StatusBadRequest, &user.LoginResp{
+		c.JSON(consts.StatusBadRequest, &user.UserInfoResp{
 			Base: &user.Base{Code: consts.StatusBadRequest, Msg: "Invalid input:" + err.Error()},
 		})
 		return
@@ -112,18 +119,27 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	userService := service.NewUserService(ctx)
 	userID := c.GetString("user_id")
 	err, resp := userService.UserInfoService(&req, userID)
-	switch {
-	case errors.Is(err, e.ErrUserIDNotFound):
-		{
-			c.JSON(consts.StatusUnauthorized, &user.Base{Code: consts.StatusUnauthorized, Msg: "fetch user info failed:" + err.Error()})
-		}
-	case errors.Is(err, e.ErrUserNotFound):
-		{
-			c.JSON(consts.StatusUnauthorized, &user.Base{Code: consts.StatusUnauthorized, Msg: "fetch user info failed:" + err.Error()})
-		}
-	case errors.Is(err, e.ErrDB):
-		{
-			c.JSON(consts.StatusInternalServerError, &user.Base{Code: consts.StatusInternalServerError, Msg: "fetch user info failed:" + err.Error()})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrUserIDNotFound):
+			c.JSON(consts.StatusUnauthorized, &user.UserInfoResp{
+				Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "fetch user info failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrUserNotFound):
+			c.JSON(consts.StatusUnauthorized, &user.UserInfoResp{
+				Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "fetch user info failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &user.UserInfoResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "fetch user info failed:" + err.Error()},
+			})
+			return
+
 		}
 	}
 
@@ -143,7 +159,46 @@ func UploadAvatar(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	userService := service.NewUserService(ctx)
+	userID := c.GetString("user_id")
+	err = userService.UploadAvatarService(&req, userID)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrUserIDNotFound):
+			c.JSON(consts.StatusUnauthorized, &user.UploadAvatarResp{
+				Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "upload avatar failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrFileRequired):
+			c.JSON(consts.StatusBadRequest, &user.UploadAvatarResp{
+				Base: &user.Base{Code: consts.StatusBadRequest, Msg: "upload avatar failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrFileSaveFailed):
+			c.JSON(consts.StatusInternalServerError, &user.UploadAvatarResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "upload avatar failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrFileDeleteFailed):
+			c.JSON(consts.StatusInternalServerError, &user.UploadAvatarResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "upload avatar failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &user.UploadAvatarResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "upload avatar failed:" + err.Error()},
+			})
+			return
+
+		}
+	}
+
 	c.JSON(consts.StatusOK, &user.UploadAvatarResp{
-		Base: &user.Base{Code: consts.StatusOK},
+		Base: &user.Base{Code: consts.StatusOK, Msg: "avatar upload successfully"},
 	})
 }

@@ -26,9 +26,18 @@ func main() {
 	config.MYSQLDB.AutoMigrate(&dao.User{})
 
 	h.StaticFS("/static", &app.FS{Root: "./", GenerateIndexPages: true}) //root不要设置成./static T-T
-	h.POST("/user/register", user.Register)
-	h.POST("/user/login", user.Login)
-	h.GET("/user/info", middleware.JWTAuth(), user.UserInfo)
+
+	_userGroup := h.Group("/user")
+	{
+		_userGroup.POST("/register", user.Register)
+		_userGroup.POST("/login", user.Login)
+	}
+
+	_userAuthGroup := h.Group("/user").Use(middleware.JWTAuth())
+	{
+		_userAuthGroup.GET("/info", user.UserInfo)
+		_userAuthGroup.POST("/avatar", user.UploadAvatar)
+	}
 
 	h.Spin()
 }

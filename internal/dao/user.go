@@ -22,3 +22,10 @@ func SetRefreshToken(ctx context.Context, userID string, refreshtoken string, du
 func FindUserByID(ctx context.Context, user *User, userID string) error {
 	return config.MYSQLDB.Where("id = ?", userID).First(user).Error
 }
+
+func UpdateUserAvatar(ctx context.Context, userID string, avatarURL string) error {
+	return config.MYSQLDB.Model(&User{}).Where("id = ?", userID).Updates(map[string]interface{}{
+		"avatar_url": avatarURL,
+		"update_at":  time.Now(),
+	}).Error
+}
