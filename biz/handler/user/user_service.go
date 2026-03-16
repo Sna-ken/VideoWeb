@@ -147,11 +147,11 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 }
 
 // UploadAvatar .
-// @router /user/avatar [PUT]
+// @router /user/avatar [POST]
 func UploadAvatar(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req user.UploadAvatarReq
-	err = c.BindAndValidate(&req)
+	file, err := c.FormFile("avatar")
 	if err != nil {
 		c.JSON(consts.StatusBadRequest, &user.UploadAvatarResp{
 			Base: &user.Base{Code: consts.StatusBadRequest, Msg: "Invalid input:" + err.Error()},
@@ -161,7 +161,7 @@ func UploadAvatar(ctx context.Context, c *app.RequestContext) {
 
 	userService := service.NewUserService(ctx)
 	userID := c.GetString("user_id")
-	err = userService.UploadAvatarService(&req, userID)
+	err = userService.UploadAvatarService(&req, userID, file)
 
 	if err != nil {
 		switch {

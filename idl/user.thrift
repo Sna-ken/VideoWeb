@@ -51,7 +51,7 @@ struct UserInfoResp{
 struct UploadAvatarReq{
    1:string access_token(api.header="access_token"),
    2:string refresh_token(api.header="refresh_token"),
-   3:binary avatar(api.file="avatar"),
+   3:binary avatar(api.form="avatar"),
 }
 
 struct UploadAvatarResp{

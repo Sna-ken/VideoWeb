@@ -26,6 +26,7 @@ func main() {
 	config.MYSQLDB.AutoMigrate(&dao.User{})
 
 	h.StaticFS("/static", &app.FS{Root: "./", GenerateIndexPages: true}) //root不要设置成./static T-T
+	h.StaticFS("/avatar", &app.FS{Root: "./static/", GenerateIndexPages: true})
 
 	_userGroup := h.Group("/user")
 	{

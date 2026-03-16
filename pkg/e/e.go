@@ -13,4 +13,5 @@ var (
 	ErrFileRequired     = errors.New("file is empty")
 	ErrFileSaveFailed   = errors.New("save file failed")
 	ErrFileDeleteFailed = errors.New("delete file failed")
+	ErrFileOpenFailed   = errors.New("open file failed")
 )

@@ -64,6 +64,14 @@ func JWTAuth() app.HandlerFunc {
 			c.Abort()
 			return
 		}
+		expiryTime := time.Unix(rfClaims.ExpiresAt, 0)
+		timeUntilExpiry := time.Until(expiryTime)
+		if timeUntilExpiry > 10*time.Minute {
+			// Refresh Token 还未接近过期，直接返回
+			c.Set("user_id", rfClaims.UserID)
+			c.Next(ctx)
+			return
+		}
 
 		newAccesstoken, errA := jwt.GenerateAccessToken(rfClaims.UserID)
 		newRefreshtoken, errR := jwt.GenerateRefreshToken(rfClaims.UserID)
@@ -75,8 +83,7 @@ func JWTAuth() app.HandlerFunc {
 			return
 		}
 
-		duration := time.Duration(config.JWTConfig.RefreshTokenExpiry) * time.Second
-		err = config.REDISDB.Set(ctx, "user_rftoken:"+rfClaims.UserID, newRefreshtoken, duration).Err()
+		err = config.REDISDB.Set(ctx, "user_rftoken:"+rfClaims.UserID, newRefreshtoken, timeUntilExpiry).Err()
 		if err != nil {
 			log.Println("Failed to save refresh token to Redis:", err)
 		} else {

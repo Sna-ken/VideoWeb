@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"io"
+	"mime/multipart"
 	"time"
 
 	"github.com/Sna-ken/videoweb/biz/model/user"
@@ -133,15 +135,25 @@ func (s *UserService) UserInfoService(req *user.UserInfoReq, userID string) (err
 	}
 }
 
-func (s *UserService) UploadAvatarService(req *user.UploadAvatarReq, userID string) error {
+func (s *UserService) UploadAvatarService(req *user.UploadAvatarReq, userID string, file *multipart.FileHeader) error {
+	fileContent, err := file.Open()
+	if err != nil {
+		return e.ErrFileOpenFailed
+	}
+
+	defer fileContent.Close()
 	if userID == "" {
 		return e.ErrUserIDNotFound
 	}
 
-	if len(req.Avatar) == 0 {
-		return e.ErrFileRequired
+	avatarBytes, err := io.ReadAll(fileContent)
+	if err != nil {
+		return e.ErrFileOpenFailed
 	}
 
+	if len(avatarBytes) == 0 {
+		return e.ErrFileRequired
+	}
 	var _user dao.User
 	if err := dao.FindUserByID(s.ctx, &_user, userID); err != nil {
 		if err.Error() == "record not found" {
@@ -150,7 +162,7 @@ func (s *UserService) UploadAvatarService(req *user.UploadAvatarReq, userID stri
 		return e.ErrDB
 	}
 
-	avatarURL, err := utils.StoreAvatar(req.Avatar, userID)
+	avatarURL, err := utils.StoreAvatar(avatarBytes, userID)
 	if err != nil {
 		return e.ErrFileSaveFailed
 	}

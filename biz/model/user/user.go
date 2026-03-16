@@ -1808,7 +1808,7 @@ func (p *UserInfoResp) String() string {
 type UploadAvatarReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	Avatar       []byte `thrift:"avatar,3" form:"avatar" json:"avatar" query:"avatar"`
+	Avatar       []byte `thrift:"avatar,3" form:"avatar" json:"avatar"`
 }
 
 func NewUploadAvatarReq() *UploadAvatarReq {
