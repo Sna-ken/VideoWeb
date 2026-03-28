@@ -131,16 +131,10 @@ func (s *SocialService) FollowerListService(req *social.FollowerListReq, userID 
 	items := make([]*social.Item, 0, len(_objectList))
 
 	for _, v := range _objectList {
-		fName, err := dao.FindUsernameByID(s.ctx, v.UserID)
-		fAvatar, err := dao.FindAvatarByUserID(s.ctx, v.UserID)
-		if err != nil {
-			return e.ErrDB, nil
-		}
-
 		item := &social.Item{
 			UserID:    v.UserID,
-			Username:  fName,
-			AvatarURL: fAvatar,
+			Username:  v.Username,
+			AvatarURL: v.Avatar_url,
 		}
 		items = append(items, item)
 	}
