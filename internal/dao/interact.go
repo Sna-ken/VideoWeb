@@ -81,12 +81,16 @@ func FindCommentByVideoID(ctx context.Context, videoID string, offset int, pages
 	return config.MYSQLDB.WithContext(ctx).Where("video_id = ?", videoID).Offset(offset).Limit(pagesize).Find(comment).Error
 }
 
-func DeleteComment(ctx context.Context, videoID string, userID string) error {
-	return config.MYSQLDB.WithContext(ctx).Where("user_id = ? AND id = ?", userID, videoID).Delete(&Comment{}).Error
+func DeleteComment(ctx context.Context, CommentID string, userID string) error {
+	return config.MYSQLDB.WithContext(ctx).Where("user_id = ? AND id = ?", userID, CommentID).Delete(&Comment{}).Error
 }
 
 func FindVideoIDByCommentID(ctx context.Context, commentID string) (videoID string, err error) {
 	err = config.MYSQLDB.WithContext(ctx).Table("comments").
 		Select("video_id").Where("id = ?", commentID).Scan(&videoID).Error
 	return videoID, err
+}
+
+func DeleteCommentLike(ctx context.Context, CommentID string) error {
+	return config.MYSQLDB.WithContext(ctx).Where("comment_id = ?", CommentID).Delete(&Like{}).Error
 }

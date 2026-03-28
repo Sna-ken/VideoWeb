@@ -208,11 +208,14 @@ func (s *InteractService) CommentDeleteService(req *interact.CommentDeleteReq, u
 		return e.ErrDB
 	}
 
-	if err := dao.DeleteComment(s.ctx, videoID, userID); err != nil {
+	if err := dao.DeleteComment(s.ctx, req.CommentID, userID); err != nil {
 		return e.ErrNoPermissionOrNotFound
 	}
 
 	if err := dao.ReduceCommentCount(s.ctx, videoID); err != nil {
+		return e.ErrDB
+	}
+	if err := dao.DeleteCommentLike(s.ctx, req.CommentID); err != nil {
 		return e.ErrDB
 	}
 

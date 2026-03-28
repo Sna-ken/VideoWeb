@@ -40,11 +40,6 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 				Base: &interact.Base{Code: consts.StatusInternalServerError, Msg: "Liked failed:" + err.Error()},
 			})
 			return
-		case errors.Is(err, e.ErrUpdateLikeFailed):
-			c.JSON(consts.StatusInternalServerError, &interact.LikeActionResp{
-				Base: &interact.Base{Code: consts.StatusInternalServerError, Msg: "Liked failed:" + err.Error()},
-			})
-			return
 		case errors.Is(err, e.ErrOperationRepeated):
 			c.JSON(consts.StatusBadRequest, &interact.LikeActionResp{
 				Base: &interact.Base{Code: consts.StatusBadRequest, Msg: "Liked failed:" + err.Error()},
