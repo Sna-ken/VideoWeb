@@ -33,7 +33,7 @@ struct FollowActionResp{
 struct FollowListReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    3:i32 page_num(api.query="page_num", api.vd="$>=1"),
     4:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 
@@ -45,7 +45,7 @@ struct FollowListResp{
 struct FollowerListReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    3:i32 page_num(api.query="page_num", api.vd="$>=1"),
     4:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 
@@ -57,7 +57,7 @@ struct FollowerListResp{
 struct FriendListReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    3:i32 page_num(api.query="page_num", api.vd="$>=1"),
     4:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 

@@ -62,7 +62,7 @@ struct LikeListReq{
     2:string refresh_token(api.header="refresh_token"),
     3:string user_id(api.query="user_id"),
     4:string username(api.query="username"),
-    5:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    5:i32 page_num(api.query="page_num", api.vd="$>=1"),
     6:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 
@@ -86,7 +86,7 @@ struct CommentListReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
     3:string video_id(api.query="video_id", api.vd="len($)>0"),
-    4:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    4:i32 page_num(api.query="page_num", api.vd="$>=1"),
     5:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 

@@ -2284,7 +2284,7 @@ type LikeListReq struct {
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
 	UserID       string `thrift:"user_id,3" json:"user_id" query:"user_id"`
 	Username     string `thrift:"username,4" json:"username" query:"username"`
-	PageNum      int32  `thrift:"page_num,5" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageNum      int32  `thrift:"page_num,5" json:"page_num" query:"page_num" vd:"$>=1"`
 	PageSize     int32  `thrift:"page_size,6" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 }
 
@@ -3275,7 +3275,7 @@ type CommentListReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
 	VideoID      string `thrift:"video_id,3" json:"video_id" query:"video_id" vd:"len($)>0"`
-	PageNum      int32  `thrift:"page_num,4" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageNum      int32  `thrift:"page_num,4" json:"page_num" query:"page_num" vd:"$>=1"`
 	PageSize     int32  `thrift:"page_size,5" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 }
 

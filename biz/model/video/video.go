@@ -1567,7 +1567,7 @@ func (p *PublishResp) String() string {
 type ListReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=1"`
 	PageSize     int32  `thrift:"page_size,4" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 }
 
@@ -2043,7 +2043,7 @@ func (p *ListResp) String() string {
 type PopularReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=1"`
 	PageSize     int32  `thrift:"page_size,4" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 }
 
@@ -2520,7 +2520,7 @@ type SearchReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
 	Keyword      string `thrift:"keyword,3" json:"keyword" query:"keyword"`
-	PageNum      int32  `thrift:"page_num,4" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageNum      int32  `thrift:"page_num,4" json:"page_num" query:"page_num" vd:"$>=1"`
 	PageSize     int32  `thrift:"page_size,5" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 	Username     string `thrift:"username,6" json:"username" query:"username"`
 }

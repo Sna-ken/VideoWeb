@@ -43,7 +43,7 @@ struct PublishResp{
 struct ListReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    3:i32 page_num(api.query="page_num", api.vd="$>=1"),
     4:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 
@@ -55,7 +55,7 @@ struct ListResp{
 struct PopularReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    3:i32 page_num(api.query="page_num", api.vd="$>=1"),
     4:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 
@@ -68,7 +68,7 @@ struct SearchReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
     3:string keyword(api.query="keyword"),
-    4:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    4:i32 page_num(api.query="page_num", api.vd="$>=1"),
     5:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
     6:string username(api.query="username"),
 }

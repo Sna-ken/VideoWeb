@@ -1108,7 +1108,7 @@ func (p *FollowActionResp) String() string {
 type FollowListReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=1"`
 	PageSize     int32  `thrift:"page_size,4" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 }
 
@@ -1584,7 +1584,7 @@ func (p *FollowListResp) String() string {
 type FollowerListReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=1"`
 	PageSize     int32  `thrift:"page_size,4" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 }
 
@@ -2060,7 +2060,7 @@ func (p *FollowerListResp) String() string {
 type FriendListReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=1"`
 	PageSize     int32  `thrift:"page_size,4" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 }
 
