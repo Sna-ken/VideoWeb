@@ -4,8 +4,11 @@ package video
 
 import (
 	"context"
+	"errors"
 
 	video "github.com/Sna-ken/videoweb/biz/model/video"
+	service "github.com/Sna-ken/videoweb/biz/service/video"
+	"github.com/Sna-ken/videoweb/pkg/e"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
@@ -15,15 +18,55 @@ import (
 func Publish(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req video.PublishReq
-	err = c.BindAndValidate(&req)
+	coverfile, err := c.FormFile("cover")
+	videofile, err := c.FormFile("video")
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusBadRequest, &video.PublishResp{
+			Base: &video.Base{Code: consts.StatusBadRequest, Msg: "Invalid input:" + err.Error()},
+		})
 		return
 	}
 
-	resp := new(video.PublishResp)
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.JSON(consts.StatusBadRequest, err.Error())
+		return
+	}
 
-	c.JSON(consts.StatusOK, resp)
+	videoService := service.NewVideoService(ctx)
+	userID := c.GetString("user_id")
+
+	err = videoService.PublishService(&req, userID, coverfile, videofile)
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrFileOpenFailed):
+			c.JSON(consts.StatusInternalServerError, &video.PublishResp{
+				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Publish failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrVideoOpenFailed):
+			c.JSON(consts.StatusInternalServerError, &video.PublishResp{
+				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Publish failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrFileRequired):
+			c.JSON(consts.StatusBadRequest, &video.PublishResp{
+				Base: &video.Base{Code: consts.StatusBadRequest, Msg: "Publish failed:" + err.Error()},
+			})
+			return
+		case errors.Is(err, e.ErrUserIDNotFound):
+			c.JSON(consts.StatusUnauthorized, &video.PublishResp{
+				Base: &video.Base{Code: consts.StatusUnauthorized, Msg: "Publish failed:" + err.Error()},
+			})
+			return
+		}
+	}
+
+	c.JSON(consts.StatusOK, &video.PublishResp{
+		Base: &video.Base{Code: consts.StatusOK, Msg: "Video published successfully"},
+	})
 }
 
 // List .
@@ -32,12 +75,26 @@ func List(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req video.ListReq
 	err = c.BindAndValidate(&req)
-	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
-		return
-	}
-
 	resp := new(video.ListResp)
+
+	videoService := service.NewVideoService(ctx)
+	userID := c.GetString("user_id")
+
+	err, resp = videoService.ListService(&req, userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &video.ListResp{
+				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Failed to fetch video list:" + err.Error()},
+			})
+			return
+		case errors.Is(err, e.ErrUserIDNotFound):
+			c.JSON(consts.StatusUnauthorized, &video.ListResp{
+				Base: &video.Base{Code: consts.StatusUnauthorized, Msg: "Failed to fetch video list:" + err.Error()},
+			})
+			return
+		}
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -48,28 +105,42 @@ func Popular(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req video.PopularReq
 	err = c.BindAndValidate(&req)
-	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
-		return
-	}
-
 	resp := new(video.PopularResp)
+	videoService := service.NewVideoService(ctx)
+
+	err, resp = videoService.PopularService(&req)
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &video.PopularResp{
+				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Failed to fetch popular videos:" + err.Error()},
+			})
+			return
+		}
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }
 
-// Search .
-// @router /video/search [POST]
+// Search
+// @router /video/search [GET]
 func Search(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req video.SearchReq
 	err = c.BindAndValidate(&req)
-	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
-		return
-	}
-
 	resp := new(video.SearchResp)
+	videoService := service.NewVideoService(ctx)
+
+	err, resp = videoService.SearchService(&req)
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &video.SearchResp{
+				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Failed to search videos:" + err.Error()},
+			})
+			return
+		}
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }

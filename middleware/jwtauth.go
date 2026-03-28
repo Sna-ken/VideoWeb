@@ -2,8 +2,6 @@ package middleware
 
 import (
 	"context"
-	"log"
-	"time"
 
 	"github.com/Sna-ken/videoweb/biz/model/user"
 	"github.com/Sna-ken/videoweb/config"
@@ -14,84 +12,48 @@ import (
 
 func JWTAuth() app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
-		accesstoken := c.Request.Header.Get("access_token")
-		refreshtoken := c.Request.Header.Get("refresh_token")
-		if accesstoken == "" {
-			c.JSON(consts.StatusUnauthorized, &user.Base{
-				Code: consts.StatusUnauthorized, Msg: "token is empty",
-			})
-			c.Abort()
-			return
-		}
 
-		acClaims, err := jwt.ValidateAccessToken(accesstoken)
-		if err == nil {
-			c.Set("user_id", acClaims.UserID)
+		access := string(c.GetHeader("access_token"))
+
+		if claims, err := jwt.ValidateAccessToken(access); err == nil {
+			c.Set("user_id", claims.UserID)
 			c.Next(ctx)
 			return
 		}
 
-		if refreshtoken == "" {
+		refresh := string(c.GetHeader("refresh_token"))
+		if refresh == "" {
 			c.JSON(consts.StatusUnauthorized, &user.Base{
-				Code: consts.StatusUnauthorized, Msg: "accesstoken expried and lack refresh token",
+				Code: consts.StatusUnauthorized,
+				Msg:  "missing refresh token",
 			})
 			c.Abort()
 			return
 		}
 
-		rfClaims, err := jwt.ValidateRefreshToken(refreshtoken)
+		rfClaims, err := jwt.ValidateRefreshToken(refresh)
 		if err != nil {
 			c.JSON(consts.StatusUnauthorized, &user.Base{
-				Code: consts.StatusUnauthorized, Msg: "refreshtoken expried",
+				Code: consts.StatusUnauthorized,
+				Msg:  "refreshtoken invalid",
 			})
 			c.Abort()
 			return
 		}
 
 		val, err := config.REDISDB.Get(ctx, "user_rftoken:"+rfClaims.UserID).Result()
-		if err != nil {
+		if err != nil || val != refresh {
 			c.JSON(consts.StatusUnauthorized, &user.Base{
-				Code: consts.StatusUnauthorized, Msg: "session invalid:" + err.Error(),
+				Code: consts.StatusUnauthorized,
+				Msg:  "session invalid",
 			})
 			c.Abort()
 			return
 		}
 
-		if val != refreshtoken {
-			c.JSON(consts.StatusUnauthorized, &user.Base{
-				Code: consts.StatusUnauthorized, Msg: "session invalid: token mismatch",
-			})
-			c.Abort()
-			return
-		}
-		expiryTime := time.Unix(rfClaims.ExpiresAt, 0)
-		timeUntilExpiry := time.Until(expiryTime)
-		if timeUntilExpiry > 10*time.Minute {
-			// Refresh Token 还未接近过期，直接返回
-			c.Set("user_id", rfClaims.UserID)
-			c.Next(ctx)
-			return
-		}
+		newAccess, _ := jwt.GenerateAccessToken(rfClaims.UserID)
 
-		newAccesstoken, errA := jwt.GenerateAccessToken(rfClaims.UserID)
-		newRefreshtoken, errR := jwt.GenerateRefreshToken(rfClaims.UserID)
-		if errA != nil || errR != nil {
-			c.JSON(consts.StatusInternalServerError, &user.Base{
-				Code: consts.StatusInternalServerError, Msg: "genrate token failed" + errA.Error() + " " + errR.Error(),
-			})
-			c.Abort()
-			return
-		}
-
-		err = config.REDISDB.Set(ctx, "user_rftoken:"+rfClaims.UserID, newRefreshtoken, timeUntilExpiry).Err()
-		if err != nil {
-			log.Println("Failed to save refresh token to Redis:", err)
-		} else {
-			log.Println("Successfully saved Redis key:", "user_rftoken:"+rfClaims.UserID)
-		}
-
-		c.Header("new_access_token", newAccesstoken)
-		c.Header("new_refresh_token", newRefreshtoken)
+		c.Header("new_access_token", newAccess)
 
 		c.Set("user_id", rfClaims.UserID)
 		c.Next(ctx)

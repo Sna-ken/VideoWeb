@@ -196,8 +196,8 @@ func (p *Base) String() string {
 }
 
 type Data struct {
-	Item  *Item `thrift:"item,1" form:"item" json:"item" query:"item"`
-	Total int32 `thrift:"total,2" form:"total" json:"total" query:"total"`
+	Item  []*Item `thrift:"item,1,default,list<Item>" form:"item" json:"item" query:"item"`
+	Total int32   `thrift:"total,2" form:"total" json:"total" query:"total"`
 }
 
 func NewData() *Data {
@@ -207,12 +207,7 @@ func NewData() *Data {
 func (p *Data) InitDefault() {
 }
 
-var Data_Item_DEFAULT *Item
-
-func (p *Data) GetItem() (v *Item) {
-	if !p.IsSetItem() {
-		return Data_Item_DEFAULT
-	}
+func (p *Data) GetItem() (v []*Item) {
 	return p.Item
 }
 
@@ -223,10 +218,6 @@ func (p *Data) GetTotal() (v int32) {
 var fieldIDToName_Data = map[int16]string{
 	1: "item",
 	2: "total",
-}
-
-func (p *Data) IsSetItem() bool {
-	return p.Item != nil
 }
 
 func (p *Data) Read(iprot thrift.TProtocol) (err error) {
@@ -249,7 +240,7 @@ func (p *Data) Read(iprot thrift.TProtocol) (err error) {
 
 		switch fieldId {
 		case 1:
-			if fieldTypeId == thrift.STRUCT {
+			if fieldTypeId == thrift.LIST {
 				if err = p.ReadField1(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -294,8 +285,23 @@ ReadStructEndError:
 }
 
 func (p *Data) ReadField1(iprot thrift.TProtocol) error {
-	_field := NewItem()
-	if err := _field.Read(iprot); err != nil {
+	_, size, err := iprot.ReadListBegin()
+	if err != nil {
+		return err
+	}
+	_field := make([]*Item, 0, size)
+	values := make([]Item, size)
+	for i := 0; i < size; i++ {
+		_elem := &values[i]
+		_elem.InitDefault()
+
+		if err := _elem.Read(iprot); err != nil {
+			return err
+		}
+
+		_field = append(_field, _elem)
+	}
+	if err := iprot.ReadListEnd(); err != nil {
 		return err
 	}
 	p.Item = _field
@@ -346,10 +352,18 @@ WriteStructEndError:
 }
 
 func (p *Data) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("item", thrift.STRUCT, 1); err != nil {
+	if err = oprot.WriteFieldBegin("item", thrift.LIST, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := p.Item.Write(oprot); err != nil {
+	if err := oprot.WriteListBegin(thrift.STRUCT, len(p.Item)); err != nil {
+		return err
+	}
+	for _, v := range p.Item {
+		if err := v.Write(oprot); err != nil {
+			return err
+		}
+	}
+	if err := oprot.WriteListEnd(); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -388,18 +402,19 @@ func (p *Data) String() string {
 }
 
 type Item struct {
-	VideoID      string `thrift:"video_id,1" form:"video_id" json:"video_id" query:"video_id"`
-	UserID       string `thrift:"user_id,2" form:"user_id" json:"user_id" query:"user_id"`
-	VideoURL     string `thrift:"video_url,3" form:"video_url" json:"video_url" query:"video_url"`
-	CoverURL     string `thrift:"cover_url,4" form:"cover_url" json:"cover_url" query:"cover_url"`
-	Title        string `thrift:"title,5" form:"title" json:"title" query:"title"`
-	Description  string `thrift:"description,6" form:"description" json:"description" query:"description"`
-	VisitCount   int32  `thrift:"visit_count,7" form:"visit_count" json:"visit_count" query:"visit_count"`
-	LikeCount    int32  `thrift:"like_count,8" form:"like_count" json:"like_count" query:"like_count"`
-	CommentCount int32  `thrift:"comment_count,9" form:"comment_count" json:"comment_count" query:"comment_count"`
-	CreatedAt    string `thrift:"created_at,10" form:"created_at" json:"created_at" query:"created_at"`
-	UpdatedAt    string `thrift:"updated_at,11" form:"updated_at" json:"updated_at" query:"updated_at"`
-	DeletedAt    string `thrift:"deleted_at,12" form:"deleted_at" json:"deleted_at" query:"deleted_at"`
+	Username     string `thrift:"username,1" form:"username" json:"username" query:"username"`
+	VideoID      string `thrift:"video_id,2" form:"video_id" json:"video_id" query:"video_id"`
+	UserID       string `thrift:"user_id,3" form:"user_id" json:"user_id" query:"user_id"`
+	VideoURL     string `thrift:"video_url,4" form:"video_url" json:"video_url" query:"video_url"`
+	CoverURL     string `thrift:"cover_url,5" form:"cover_url" json:"cover_url" query:"cover_url"`
+	Title        string `thrift:"title,6" form:"title" json:"title" query:"title"`
+	Description  string `thrift:"description,7" form:"description" json:"description" query:"description"`
+	VisitCount   int32  `thrift:"visit_count,8" form:"visit_count" json:"visit_count" query:"visit_count"`
+	LikeCount    int32  `thrift:"like_count,9" form:"like_count" json:"like_count" query:"like_count"`
+	CommentCount int32  `thrift:"comment_count,10" form:"comment_count" json:"comment_count" query:"comment_count"`
+	CreatedAt    string `thrift:"created_at,11" form:"created_at" json:"created_at" query:"created_at"`
+	UpdatedAt    string `thrift:"updated_at,12" form:"updated_at" json:"updated_at" query:"updated_at"`
+	DeletedAt    string `thrift:"deleted_at,13" form:"deleted_at" json:"deleted_at" query:"deleted_at"`
 }
 
 func NewItem() *Item {
@@ -407,6 +422,10 @@ func NewItem() *Item {
 }
 
 func (p *Item) InitDefault() {
+}
+
+func (p *Item) GetUsername() (v string) {
+	return p.Username
 }
 
 func (p *Item) GetVideoID() (v string) {
@@ -458,18 +477,19 @@ func (p *Item) GetDeletedAt() (v string) {
 }
 
 var fieldIDToName_Item = map[int16]string{
-	1:  "video_id",
-	2:  "user_id",
-	3:  "video_url",
-	4:  "cover_url",
-	5:  "title",
-	6:  "description",
-	7:  "visit_count",
-	8:  "like_count",
-	9:  "comment_count",
-	10: "created_at",
-	11: "updated_at",
-	12: "deleted_at",
+	1:  "username",
+	2:  "video_id",
+	3:  "user_id",
+	4:  "video_url",
+	5:  "cover_url",
+	6:  "title",
+	7:  "description",
+	8:  "visit_count",
+	9:  "like_count",
+	10: "comment_count",
+	11: "created_at",
+	12: "updated_at",
+	13: "deleted_at",
 }
 
 func (p *Item) Read(iprot thrift.TProtocol) (err error) {
@@ -540,7 +560,7 @@ func (p *Item) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 7:
-			if fieldTypeId == thrift.I32 {
+			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField7(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -564,7 +584,7 @@ func (p *Item) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 10:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I32 {
 				if err = p.ReadField10(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -582,6 +602,14 @@ func (p *Item) Read(iprot thrift.TProtocol) (err error) {
 		case 12:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField12(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 13:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField13(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -624,7 +652,7 @@ func (p *Item) ReadField1(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.VideoID = _field
+	p.Username = _field
 	return nil
 }
 func (p *Item) ReadField2(iprot thrift.TProtocol) error {
@@ -635,7 +663,7 @@ func (p *Item) ReadField2(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.UserID = _field
+	p.VideoID = _field
 	return nil
 }
 func (p *Item) ReadField3(iprot thrift.TProtocol) error {
@@ -646,7 +674,7 @@ func (p *Item) ReadField3(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.VideoURL = _field
+	p.UserID = _field
 	return nil
 }
 func (p *Item) ReadField4(iprot thrift.TProtocol) error {
@@ -657,7 +685,7 @@ func (p *Item) ReadField4(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.CoverURL = _field
+	p.VideoURL = _field
 	return nil
 }
 func (p *Item) ReadField5(iprot thrift.TProtocol) error {
@@ -668,7 +696,7 @@ func (p *Item) ReadField5(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.Title = _field
+	p.CoverURL = _field
 	return nil
 }
 func (p *Item) ReadField6(iprot thrift.TProtocol) error {
@@ -679,18 +707,18 @@ func (p *Item) ReadField6(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.Description = _field
+	p.Title = _field
 	return nil
 }
 func (p *Item) ReadField7(iprot thrift.TProtocol) error {
 
-	var _field int32
-	if v, err := iprot.ReadI32(); err != nil {
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
 		_field = v
 	}
-	p.VisitCount = _field
+	p.Description = _field
 	return nil
 }
 func (p *Item) ReadField8(iprot thrift.TProtocol) error {
@@ -701,7 +729,7 @@ func (p *Item) ReadField8(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.LikeCount = _field
+	p.VisitCount = _field
 	return nil
 }
 func (p *Item) ReadField9(iprot thrift.TProtocol) error {
@@ -712,18 +740,18 @@ func (p *Item) ReadField9(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.CommentCount = _field
+	p.LikeCount = _field
 	return nil
 }
 func (p *Item) ReadField10(iprot thrift.TProtocol) error {
 
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
+	var _field int32
+	if v, err := iprot.ReadI32(); err != nil {
 		return err
 	} else {
 		_field = v
 	}
-	p.CreatedAt = _field
+	p.CommentCount = _field
 	return nil
 }
 func (p *Item) ReadField11(iprot thrift.TProtocol) error {
@@ -734,10 +762,21 @@ func (p *Item) ReadField11(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.UpdatedAt = _field
+	p.CreatedAt = _field
 	return nil
 }
 func (p *Item) ReadField12(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.UpdatedAt = _field
+	return nil
+}
+func (p *Item) ReadField13(iprot thrift.TProtocol) error {
 
 	var _field string
 	if v, err := iprot.ReadString(); err != nil {
@@ -803,6 +842,10 @@ func (p *Item) Write(oprot thrift.TProtocol) (err error) {
 			fieldId = 12
 			goto WriteFieldError
 		}
+		if err = p.writeField13(oprot); err != nil {
+			fieldId = 13
+			goto WriteFieldError
+		}
 	}
 	if err = oprot.WriteFieldStop(); err != nil {
 		goto WriteFieldStopError
@@ -822,10 +865,10 @@ WriteStructEndError:
 }
 
 func (p *Item) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("video_id", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("username", thrift.STRING, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.VideoID); err != nil {
+	if err := oprot.WriteString(p.Username); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -839,10 +882,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("user_id", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("video_id", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.UserID); err != nil {
+	if err := oprot.WriteString(p.VideoID); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -856,10 +899,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("video_url", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("user_id", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.VideoURL); err != nil {
+	if err := oprot.WriteString(p.UserID); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -873,10 +916,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("cover_url", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("video_url", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.CoverURL); err != nil {
+	if err := oprot.WriteString(p.VideoURL); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -890,10 +933,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("title", thrift.STRING, 5); err != nil {
+	if err = oprot.WriteFieldBegin("cover_url", thrift.STRING, 5); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Title); err != nil {
+	if err := oprot.WriteString(p.CoverURL); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -907,10 +950,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField6(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("description", thrift.STRING, 6); err != nil {
+	if err = oprot.WriteFieldBegin("title", thrift.STRING, 6); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Description); err != nil {
+	if err := oprot.WriteString(p.Title); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -924,10 +967,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField7(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("visit_count", thrift.I32, 7); err != nil {
+	if err = oprot.WriteFieldBegin("description", thrift.STRING, 7); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI32(p.VisitCount); err != nil {
+	if err := oprot.WriteString(p.Description); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -941,10 +984,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField8(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("like_count", thrift.I32, 8); err != nil {
+	if err = oprot.WriteFieldBegin("visit_count", thrift.I32, 8); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI32(p.LikeCount); err != nil {
+	if err := oprot.WriteI32(p.VisitCount); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -958,10 +1001,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField9(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("comment_count", thrift.I32, 9); err != nil {
+	if err = oprot.WriteFieldBegin("like_count", thrift.I32, 9); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteI32(p.CommentCount); err != nil {
+	if err := oprot.WriteI32(p.LikeCount); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -975,10 +1018,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField10(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("created_at", thrift.STRING, 10); err != nil {
+	if err = oprot.WriteFieldBegin("comment_count", thrift.I32, 10); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.CreatedAt); err != nil {
+	if err := oprot.WriteI32(p.CommentCount); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -992,10 +1035,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField11(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("updated_at", thrift.STRING, 11); err != nil {
+	if err = oprot.WriteFieldBegin("created_at", thrift.STRING, 11); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.UpdatedAt); err != nil {
+	if err := oprot.WriteString(p.CreatedAt); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1009,10 +1052,10 @@ WriteFieldEndError:
 }
 
 func (p *Item) writeField12(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("deleted_at", thrift.STRING, 12); err != nil {
+	if err = oprot.WriteFieldBegin("updated_at", thrift.STRING, 12); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.DeletedAt); err != nil {
+	if err := oprot.WriteString(p.UpdatedAt); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1023,6 +1066,23 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 12 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 12 end error: ", p), err)
+}
+
+func (p *Item) writeField13(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("deleted_at", thrift.STRING, 13); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.DeletedAt); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 13 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 13 end error: ", p), err)
 }
 
 func (p *Item) String() string {
@@ -1509,7 +1569,6 @@ type ListReq struct {
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
 	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=0"`
 	PageSize     int32  `thrift:"page_size,4" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
-	UserID       string `thrift:"user_id,5" json:"user_id" query:"user_id"`
 }
 
 func NewListReq() *ListReq {
@@ -1535,16 +1594,11 @@ func (p *ListReq) GetPageSize() (v int32) {
 	return p.PageSize
 }
 
-func (p *ListReq) GetUserID() (v string) {
-	return p.UserID
-}
-
 var fieldIDToName_ListReq = map[int16]string{
 	1: "access_token",
 	2: "refresh_token",
 	3: "page_num",
 	4: "page_size",
-	5: "user_id",
 }
 
 func (p *ListReq) Read(iprot thrift.TProtocol) (err error) {
@@ -1593,14 +1647,6 @@ func (p *ListReq) Read(iprot thrift.TProtocol) (err error) {
 		case 4:
 			if fieldTypeId == thrift.I32 {
 				if err = p.ReadField4(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 5:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField5(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -1679,17 +1725,6 @@ func (p *ListReq) ReadField4(iprot thrift.TProtocol) error {
 	p.PageSize = _field
 	return nil
 }
-func (p *ListReq) ReadField5(iprot thrift.TProtocol) error {
-
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.UserID = _field
-	return nil
-}
 
 func (p *ListReq) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -1711,10 +1746,6 @@ func (p *ListReq) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField4(oprot); err != nil {
 			fieldId = 4
-			goto WriteFieldError
-		}
-		if err = p.writeField5(oprot); err != nil {
-			fieldId = 5
 			goto WriteFieldError
 		}
 	}
@@ -1801,23 +1832,6 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
-}
-
-func (p *ListReq) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("user_id", thrift.STRING, 5); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.UserID); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
 }
 
 func (p *ListReq) String() string {
@@ -2505,10 +2519,10 @@ func (p *PopularResp) String() string {
 type SearchReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	Keyword      string `thrift:"keyword,3" form:"keyword" json:"keyword"`
-	PageNum      int32  `thrift:"page_num,4" form:"page_num" json:"page_num" vd:"$>=0"`
-	PageSize     int32  `thrift:"page_size,5" form:"page_size" json:"page_size" vd:"$>=1 && $<=100"`
-	Username     string `thrift:"username,6" form:"username" json:"username"`
+	Keyword      string `thrift:"keyword,3" json:"keyword" query:"keyword"`
+	PageNum      int32  `thrift:"page_num,4" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageSize     int32  `thrift:"page_size,5" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
+	Username     string `thrift:"username,6" json:"username" query:"username"`
 }
 
 func NewSearchReq() *SearchReq {
