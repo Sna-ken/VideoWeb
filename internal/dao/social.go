@@ -29,9 +29,9 @@ func FindFollowByUserID(ctx context.Context, userID string, offset int, pagesize
 }
 
 func FindFollowerByUserID(ctx context.Context, userID string, offset int, pagesize int, object *[]SocialObject) error {
-	return config.MYSQLDB.WithContext(ctx).Table("social_object").Select("users.id as user_id, users.username,users.avatar_url").
-		Joins("JOIN users ON social_object.user_id = users.id").
-		Where("social_object.object_id = ?", userID).Offset(offset).Limit(pagesize).Find(object).Error
+	return config.MYSQLDB.WithContext(ctx).Table("social_objects").Select("users.id as user_id, users.username,users.avatar_url").
+		Joins("JOIN users ON social_objects.user_id = users.id").
+		Where("social_objects.object_id = ?", userID).Offset(offset).Limit(pagesize).Find(object).Error
 }
 
 func FindFriendByUserID(ctx context.Context, userID string, offset int, pagesize int, object *[]SocialObject) error {
