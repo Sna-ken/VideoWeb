@@ -78,11 +78,11 @@ func (s *SocialService) FollowActionService(req *social.FollowActionReq, userID 
 			}
 		}
 		if req.ActionType == "0" {
-			return e.ErrOprationRepeated
+			return e.ErrOperationRepeated
 		}
 	} else {
 		if req.ActionType == "1" {
-			return e.ErrOprationRepeated
+			return e.ErrOperationRepeated
 		}
 		if req.ActionType == "0" {
 			if err = dao.RemoveSocialObject(s.ctx, userID, toUserID); err != nil {

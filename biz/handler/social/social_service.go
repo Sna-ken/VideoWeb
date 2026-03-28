@@ -45,7 +45,7 @@ func FollowAction(ctx context.Context, c *app.RequestContext) {
 				Base: &social.Base{Code: consts.StatusBadRequest, Msg: "follow failed:" + err.Error()},
 			})
 			return
-		case errors.Is(err, e.ErrOprationRepeated):
+		case errors.Is(err, e.ErrOperationRepeated):
 			c.JSON(consts.StatusBadRequest, &social.FollowActionResp{
 				Base: &social.Base{Code: consts.StatusBadRequest, Msg: "follow failed:" + err.Error()},
 			})

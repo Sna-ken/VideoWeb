@@ -35,5 +35,5 @@ func FindFollowerByUserID(ctx context.Context, userID string, offset int, pagesi
 func FindFriendByUserID(ctx context.Context, userID string, offset int, pagesize int, object *[]SocialObject) error {
 	return config.MYSQLDB.WithContext(ctx).Table("social_objects as o1").Select("o1.*").
 		Joins("INNER JOIN social_objects as o2 ON o1.user_id = o2.object_id AND o1.object_id = o2.user_id").
-		Where("o1.user_id = ?", userID).Find(&object).Error
+		Where("o1.user_id = ?", userID).Offset(offset).Limit(pagesize).Find(object).Error
 }

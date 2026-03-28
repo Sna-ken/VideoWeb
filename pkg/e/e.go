@@ -17,7 +17,7 @@ var (
 	ErrVideoOpenFailed        = errors.New("open video file failed")
 	ErrVideoRequired          = errors.New("video file is empty")
 	ErrUpdateLikeFailed       = errors.New("update like failed")
-	ErrOprationRepeated       = errors.New("Opration repeated")
+	ErrOperationRepeated      = errors.New("Operation repeated")
 	ErrIDAndNameInconsistent  = errors.New("UserID and username are inconsistent")
 	ErrNoPermissionOrNotFound = errors.New("Permission denied or record not found")
 	ErrCanNotSelfFollow       = errors.New("Can't follow youself")

@@ -55,11 +55,11 @@ func (s *InteractService) LikeActionService(req *interact.LikeActionReq, userID 
 			}
 		}
 		if req.ActionType == "0" {
-			return e.ErrOprationRepeated
+			return e.ErrOperationRepeated
 		}
 	} else {
 		if req.ActionType == "1" {
-			return e.ErrOprationRepeated
+			return e.ErrOperationRepeated
 		}
 		if req.ActionType == "0" {
 			if req.VideoID != "" {
