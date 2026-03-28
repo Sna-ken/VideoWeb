@@ -52,6 +52,6 @@ var JWTConfig = struct {
 }{
 	AccessTokenSecret:  "your-access-token-secret-key",
 	RefreshTokenSecret: "your-refresh-token-secret-key",
-	AccessTokenExpiry:  180,    // 30分钟
+	AccessTokenExpiry:  180,    // 3分钟
 	RefreshTokenExpiry: 604800, // 7天
 }

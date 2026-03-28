@@ -4,8 +4,11 @@ package social
 
 import (
 	"context"
+	"errors"
 
 	social "github.com/Sna-ken/videoweb/biz/model/social"
+	service "github.com/Sna-ken/videoweb/biz/service/social"
+	"github.com/Sna-ken/videoweb/pkg/e"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
@@ -17,13 +20,47 @@ func FollowAction(ctx context.Context, c *app.RequestContext) {
 	var req social.FollowActionReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusBadRequest, err.Error())
 		return
 	}
 
-	resp := new(social.FollowActionResp)
+	socialService := service.NewSocialService(ctx)
+	userID := c.GetString("user_id")
 
-	c.JSON(consts.StatusOK, resp)
+	err = socialService.FollowActionService(&req, userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &social.FollowActionResp{
+				Base: &social.Base{Code: consts.StatusInternalServerError, Msg: "follow failed:" + err.Error()},
+			})
+			return
+		case errors.Is(err, e.ErrUserNotFound):
+			c.JSON(consts.StatusUnauthorized, &social.FollowActionResp{
+				Base: &social.Base{Code: consts.StatusUnauthorized, Msg: "follow failed:" + err.Error()},
+			})
+			return
+		case errors.Is(err, e.ErrIDAndNameInconsistent):
+			c.JSON(consts.StatusBadRequest, &social.FollowActionResp{
+				Base: &social.Base{Code: consts.StatusBadRequest, Msg: "follow failed:" + err.Error()},
+			})
+			return
+		case errors.Is(err, e.ErrOprationRepeated):
+			c.JSON(consts.StatusBadRequest, &social.FollowActionResp{
+				Base: &social.Base{Code: consts.StatusBadRequest, Msg: "follow failed:" + err.Error()},
+			})
+			return
+		case errors.Is(err, e.ErrCanNotSelfFollow):
+			c.JSON(consts.StatusBadRequest, &social.FollowActionResp{
+				Base: &social.Base{Code: consts.StatusBadRequest, Msg: "follow failed:" + err.Error()},
+			})
+			return
+		}
+	}
+
+	c.JSON(consts.StatusOK, social.FollowActionResp{
+		Base: &social.Base{Code: consts.StatusOK, Msg: "follow seccussfully"},
+	})
 }
 
 // FollowList .
@@ -31,14 +68,26 @@ func FollowAction(ctx context.Context, c *app.RequestContext) {
 func FollowList(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req social.FollowListReq
+	resp := new(social.FollowListResp)
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusBadRequest, err.Error())
 		return
 	}
 
-	resp := new(social.FollowListResp)
+	socialService := service.NewSocialService(ctx)
+	userID := c.GetString("user_id")
 
+	err, resp = socialService.FollowListService(&req, userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &social.FollowListResp{
+				Base: &social.Base{Code: consts.StatusInternalServerError, Msg: "follow list fetched failed:" + err.Error()},
+			})
+			return
+		}
+	}
 	c.JSON(consts.StatusOK, resp)
 }
 
@@ -47,14 +96,26 @@ func FollowList(ctx context.Context, c *app.RequestContext) {
 func FollowerList(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req social.FollowerListReq
+	resp := new(social.FollowerListResp)
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusBadRequest, err.Error())
 		return
 	}
 
-	resp := new(social.FollowerListResp)
+	socialService := service.NewSocialService(ctx)
+	userID := c.GetString("user_id")
 
+	err, resp = socialService.FollowerListService(&req, userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &social.FollowerListResp{
+				Base: &social.Base{Code: consts.StatusInternalServerError, Msg: "follower list fetched failed:" + err.Error()},
+			})
+			return
+		}
+	}
 	c.JSON(consts.StatusOK, resp)
 }
 
@@ -63,13 +124,25 @@ func FollowerList(ctx context.Context, c *app.RequestContext) {
 func FriendList(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req social.FriendListReq
+	resp := new(social.FriendListResp)
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		c.JSON(consts.StatusBadRequest, err.Error())
 		return
 	}
 
-	resp := new(social.FriendListResp)
+	socialService := service.NewSocialService(ctx)
+	userID := c.GetString("user_id")
 
+	err, resp = socialService.FriendListService(&req, userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &social.FriendListResp{
+				Base: &social.Base{Code: consts.StatusInternalServerError, Msg: "follower list fetched failed:" + err.Error()},
+			})
+			return
+		}
+	}
 	c.JSON(consts.StatusOK, resp)
 }

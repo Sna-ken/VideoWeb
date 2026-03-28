@@ -183,7 +183,7 @@ func UploadAvatar(ctx context.Context, c *app.RequestContext) {
 			})
 			return
 
-		case errors.Is(err, e.ErrFileDeleteFailed):
+		case errors.Is(err, e.ErrFileOpenFailed):
 			c.JSON(consts.StatusInternalServerError, &user.UploadAvatarResp{
 				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "upload avatar failed:" + err.Error()},
 			})

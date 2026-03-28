@@ -1,5 +1,7 @@
 package config
 
+import "os"
+
 var Mysql = struct {
 	USERNAME string
 	PASSWORD string
@@ -7,11 +9,11 @@ var Mysql = struct {
 	PORT     string
 	NAME     string
 }{
-	USERNAME: "root",
-	PASSWORD: "Aa133944",
-	HOST:     "127.0.0.1",
-	PORT:     "3306",
-	NAME:     "videoweb",
+	USERNAME: getEnv("DB_USER", "root"),
+	PASSWORD: getEnv("DB_PASSWORD", "root"),
+	HOST:     getEnv("DB_HOST", "localhost"),
+	PORT:     getEnv("DB_PORT", "3306"),
+	NAME:     getEnv("DB_NAME", "videodb"),
 }
 
 var Redis = struct {
@@ -20,8 +22,16 @@ var Redis = struct {
 	PASSWORD string
 	DB       int
 }{
-	HOST:     "127.0.0.1",
+	HOST:     "redis",
 	PORT:     "6379",
 	PASSWORD: "",
 	DB:       0,
+}
+
+func getEnv(key, defaultValue string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultValue
+	}
+	return val
 }

@@ -428,8 +428,8 @@ func (p *Item) String() string {
 }
 
 type Data struct {
-	Item  *Item `thrift:"item,1" form:"item" json:"item" query:"item"`
-	Total int32 `thrift:"total,2" form:"total" json:"total" query:"total"`
+	Item  []*Item `thrift:"item,1,default,list<Item>" form:"item" json:"item" query:"item"`
+	Total int32   `thrift:"total,2" form:"total" json:"total" query:"total"`
 }
 
 func NewData() *Data {
@@ -439,12 +439,7 @@ func NewData() *Data {
 func (p *Data) InitDefault() {
 }
 
-var Data_Item_DEFAULT *Item
-
-func (p *Data) GetItem() (v *Item) {
-	if !p.IsSetItem() {
-		return Data_Item_DEFAULT
-	}
+func (p *Data) GetItem() (v []*Item) {
 	return p.Item
 }
 
@@ -455,10 +450,6 @@ func (p *Data) GetTotal() (v int32) {
 var fieldIDToName_Data = map[int16]string{
 	1: "item",
 	2: "total",
-}
-
-func (p *Data) IsSetItem() bool {
-	return p.Item != nil
 }
 
 func (p *Data) Read(iprot thrift.TProtocol) (err error) {
@@ -481,7 +472,7 @@ func (p *Data) Read(iprot thrift.TProtocol) (err error) {
 
 		switch fieldId {
 		case 1:
-			if fieldTypeId == thrift.STRUCT {
+			if fieldTypeId == thrift.LIST {
 				if err = p.ReadField1(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -526,8 +517,23 @@ ReadStructEndError:
 }
 
 func (p *Data) ReadField1(iprot thrift.TProtocol) error {
-	_field := NewItem()
-	if err := _field.Read(iprot); err != nil {
+	_, size, err := iprot.ReadListBegin()
+	if err != nil {
+		return err
+	}
+	_field := make([]*Item, 0, size)
+	values := make([]Item, size)
+	for i := 0; i < size; i++ {
+		_elem := &values[i]
+		_elem.InitDefault()
+
+		if err := _elem.Read(iprot); err != nil {
+			return err
+		}
+
+		_field = append(_field, _elem)
+	}
+	if err := iprot.ReadListEnd(); err != nil {
 		return err
 	}
 	p.Item = _field
@@ -578,10 +584,18 @@ WriteStructEndError:
 }
 
 func (p *Data) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("item", thrift.STRUCT, 1); err != nil {
+	if err = oprot.WriteFieldBegin("item", thrift.LIST, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := p.Item.Write(oprot); err != nil {
+	if err := oprot.WriteListBegin(thrift.STRUCT, len(p.Item)); err != nil {
+		return err
+	}
+	for _, v := range p.Item {
+		if err := v.Write(oprot); err != nil {
+			return err
+		}
+	}
+	if err := oprot.WriteListEnd(); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -623,9 +637,10 @@ func (p *Data) String() string {
 type FollowActionReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	ToUserID     string `thrift:"to_user_id,3" form:"to_user_id" json:"to_user_id"`
+	ToUserid     string `thrift:"to_userid,3" form:"to_userid" json:"to_userid"`
+	ToUsername   string `thrift:"to_username,4" form:"to_username" json:"to_username"`
 	//1-关注，0-取消关注
-	ActionType string `thrift:"action_type,4" form:"action_type" json:"action_type" vd:"$=='1' || $=='0'"`
+	ActionType string `thrift:"action_type,5" form:"action_type" json:"action_type" vd:"$=='1' || $=='0'"`
 }
 
 func NewFollowActionReq() *FollowActionReq {
@@ -643,8 +658,12 @@ func (p *FollowActionReq) GetRefreshToken() (v string) {
 	return p.RefreshToken
 }
 
-func (p *FollowActionReq) GetToUserID() (v string) {
-	return p.ToUserID
+func (p *FollowActionReq) GetToUserid() (v string) {
+	return p.ToUserid
+}
+
+func (p *FollowActionReq) GetToUsername() (v string) {
+	return p.ToUsername
 }
 
 func (p *FollowActionReq) GetActionType() (v string) {
@@ -654,8 +673,9 @@ func (p *FollowActionReq) GetActionType() (v string) {
 var fieldIDToName_FollowActionReq = map[int16]string{
 	1: "access_token",
 	2: "refresh_token",
-	3: "to_user_id",
-	4: "action_type",
+	3: "to_userid",
+	4: "to_username",
+	5: "action_type",
 }
 
 func (p *FollowActionReq) Read(iprot thrift.TProtocol) (err error) {
@@ -704,6 +724,14 @@ func (p *FollowActionReq) Read(iprot thrift.TProtocol) (err error) {
 		case 4:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 5:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField5(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -768,10 +796,21 @@ func (p *FollowActionReq) ReadField3(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.ToUserID = _field
+	p.ToUserid = _field
 	return nil
 }
 func (p *FollowActionReq) ReadField4(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.ToUsername = _field
+	return nil
+}
+func (p *FollowActionReq) ReadField5(iprot thrift.TProtocol) error {
 
 	var _field string
 	if v, err := iprot.ReadString(); err != nil {
@@ -803,6 +842,10 @@ func (p *FollowActionReq) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField4(oprot); err != nil {
 			fieldId = 4
+			goto WriteFieldError
+		}
+		if err = p.writeField5(oprot); err != nil {
+			fieldId = 5
 			goto WriteFieldError
 		}
 	}
@@ -858,10 +901,10 @@ WriteFieldEndError:
 }
 
 func (p *FollowActionReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("to_user_id", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("to_userid", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.ToUserID); err != nil {
+	if err := oprot.WriteString(p.ToUserid); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -875,10 +918,10 @@ WriteFieldEndError:
 }
 
 func (p *FollowActionReq) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("action_type", thrift.STRING, 4); err != nil {
+	if err = oprot.WriteFieldBegin("to_username", thrift.STRING, 4); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.ActionType); err != nil {
+	if err := oprot.WriteString(p.ToUsername); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -889,6 +932,23 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *FollowActionReq) writeField5(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("action_type", thrift.STRING, 5); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.ActionType); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
 }
 
 func (p *FollowActionReq) String() string {
@@ -1048,9 +1108,8 @@ func (p *FollowActionResp) String() string {
 type FollowListReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	UserID       string `thrift:"user_id,3" json:"user_id" query:"user_id"`
-	PageNum      int32  `thrift:"page_num,4" json:"page_num" query:"page_num" vd:"$>=0"`
-	PageSize     int32  `thrift:"page_size,5" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
+	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageSize     int32  `thrift:"page_size,4" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 }
 
 func NewFollowListReq() *FollowListReq {
@@ -1068,10 +1127,6 @@ func (p *FollowListReq) GetRefreshToken() (v string) {
 	return p.RefreshToken
 }
 
-func (p *FollowListReq) GetUserID() (v string) {
-	return p.UserID
-}
-
 func (p *FollowListReq) GetPageNum() (v int32) {
 	return p.PageNum
 }
@@ -1083,9 +1138,8 @@ func (p *FollowListReq) GetPageSize() (v int32) {
 var fieldIDToName_FollowListReq = map[int16]string{
 	1: "access_token",
 	2: "refresh_token",
-	3: "user_id",
-	4: "page_num",
-	5: "page_size",
+	3: "page_num",
+	4: "page_size",
 }
 
 func (p *FollowListReq) Read(iprot thrift.TProtocol) (err error) {
@@ -1124,7 +1178,7 @@ func (p *FollowListReq) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 3:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I32 {
 				if err = p.ReadField3(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -1134,14 +1188,6 @@ func (p *FollowListReq) Read(iprot thrift.TProtocol) (err error) {
 		case 4:
 			if fieldTypeId == thrift.I32 {
 				if err = p.ReadField4(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 5:
-			if fieldTypeId == thrift.I32 {
-				if err = p.ReadField5(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -1200,17 +1246,6 @@ func (p *FollowListReq) ReadField2(iprot thrift.TProtocol) error {
 }
 func (p *FollowListReq) ReadField3(iprot thrift.TProtocol) error {
 
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.UserID = _field
-	return nil
-}
-func (p *FollowListReq) ReadField4(iprot thrift.TProtocol) error {
-
 	var _field int32
 	if v, err := iprot.ReadI32(); err != nil {
 		return err
@@ -1220,7 +1255,7 @@ func (p *FollowListReq) ReadField4(iprot thrift.TProtocol) error {
 	p.PageNum = _field
 	return nil
 }
-func (p *FollowListReq) ReadField5(iprot thrift.TProtocol) error {
+func (p *FollowListReq) ReadField4(iprot thrift.TProtocol) error {
 
 	var _field int32
 	if v, err := iprot.ReadI32(); err != nil {
@@ -1252,10 +1287,6 @@ func (p *FollowListReq) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField4(oprot); err != nil {
 			fieldId = 4
-			goto WriteFieldError
-		}
-		if err = p.writeField5(oprot); err != nil {
-			fieldId = 5
 			goto WriteFieldError
 		}
 	}
@@ -1311,10 +1342,10 @@ WriteFieldEndError:
 }
 
 func (p *FollowListReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("user_id", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("page_num", thrift.I32, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.UserID); err != nil {
+	if err := oprot.WriteI32(p.PageNum); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1328,24 +1359,7 @@ WriteFieldEndError:
 }
 
 func (p *FollowListReq) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("page_num", thrift.I32, 4); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteI32(p.PageNum); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
-}
-
-func (p *FollowListReq) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("page_size", thrift.I32, 5); err != nil {
+	if err = oprot.WriteFieldBegin("page_size", thrift.I32, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteI32(p.PageSize); err != nil {
@@ -1356,9 +1370,9 @@ func (p *FollowListReq) writeField5(oprot thrift.TProtocol) (err error) {
 	}
 	return nil
 WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
 WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
 }
 
 func (p *FollowListReq) String() string {
@@ -1570,9 +1584,8 @@ func (p *FollowListResp) String() string {
 type FollowerListReq struct {
 	AccessToken  string `thrift:"access_token,1" header:"access_token" json:"access_token"`
 	RefreshToken string `thrift:"refresh_token,2" header:"refresh_token" json:"refresh_token"`
-	UserID       string `thrift:"user_id,3" json:"user_id" query:"user_id"`
-	PageNum      int32  `thrift:"page_num,4" json:"page_num" query:"page_num" vd:"$>=0"`
-	PageSize     int32  `thrift:"page_size,5" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
+	PageNum      int32  `thrift:"page_num,3" json:"page_num" query:"page_num" vd:"$>=0"`
+	PageSize     int32  `thrift:"page_size,4" json:"page_size" query:"page_size" vd:"$>=1 && $<=100"`
 }
 
 func NewFollowerListReq() *FollowerListReq {
@@ -1590,10 +1603,6 @@ func (p *FollowerListReq) GetRefreshToken() (v string) {
 	return p.RefreshToken
 }
 
-func (p *FollowerListReq) GetUserID() (v string) {
-	return p.UserID
-}
-
 func (p *FollowerListReq) GetPageNum() (v int32) {
 	return p.PageNum
 }
@@ -1605,9 +1614,8 @@ func (p *FollowerListReq) GetPageSize() (v int32) {
 var fieldIDToName_FollowerListReq = map[int16]string{
 	1: "access_token",
 	2: "refresh_token",
-	3: "user_id",
-	4: "page_num",
-	5: "page_size",
+	3: "page_num",
+	4: "page_size",
 }
 
 func (p *FollowerListReq) Read(iprot thrift.TProtocol) (err error) {
@@ -1646,7 +1654,7 @@ func (p *FollowerListReq) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 3:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I32 {
 				if err = p.ReadField3(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -1656,14 +1664,6 @@ func (p *FollowerListReq) Read(iprot thrift.TProtocol) (err error) {
 		case 4:
 			if fieldTypeId == thrift.I32 {
 				if err = p.ReadField4(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 5:
-			if fieldTypeId == thrift.I32 {
-				if err = p.ReadField5(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -1722,17 +1722,6 @@ func (p *FollowerListReq) ReadField2(iprot thrift.TProtocol) error {
 }
 func (p *FollowerListReq) ReadField3(iprot thrift.TProtocol) error {
 
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		_field = v
-	}
-	p.UserID = _field
-	return nil
-}
-func (p *FollowerListReq) ReadField4(iprot thrift.TProtocol) error {
-
 	var _field int32
 	if v, err := iprot.ReadI32(); err != nil {
 		return err
@@ -1742,7 +1731,7 @@ func (p *FollowerListReq) ReadField4(iprot thrift.TProtocol) error {
 	p.PageNum = _field
 	return nil
 }
-func (p *FollowerListReq) ReadField5(iprot thrift.TProtocol) error {
+func (p *FollowerListReq) ReadField4(iprot thrift.TProtocol) error {
 
 	var _field int32
 	if v, err := iprot.ReadI32(); err != nil {
@@ -1774,10 +1763,6 @@ func (p *FollowerListReq) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField4(oprot); err != nil {
 			fieldId = 4
-			goto WriteFieldError
-		}
-		if err = p.writeField5(oprot); err != nil {
-			fieldId = 5
 			goto WriteFieldError
 		}
 	}
@@ -1833,10 +1818,10 @@ WriteFieldEndError:
 }
 
 func (p *FollowerListReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("user_id", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("page_num", thrift.I32, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.UserID); err != nil {
+	if err := oprot.WriteI32(p.PageNum); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1850,24 +1835,7 @@ WriteFieldEndError:
 }
 
 func (p *FollowerListReq) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("page_num", thrift.I32, 4); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteI32(p.PageNum); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
-}
-
-func (p *FollowerListReq) writeField5(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("page_size", thrift.I32, 5); err != nil {
+	if err = oprot.WriteFieldBegin("page_size", thrift.I32, 4); err != nil {
 		goto WriteFieldBeginError
 	}
 	if err := oprot.WriteI32(p.PageSize); err != nil {
@@ -1878,9 +1846,9 @@ func (p *FollowerListReq) writeField5(oprot thrift.TProtocol) (err error) {
 	}
 	return nil
 WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
 WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
 }
 
 func (p *FollowerListReq) String() string {

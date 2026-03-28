@@ -13,7 +13,7 @@ struct Item{
 }
 
 struct Data{
-    1:Item item,
+    1:list<Item> item,
     2:i32 total,
 }
 
@@ -21,8 +21,9 @@ struct Data{
 struct FollowActionReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:string to_user_id(api.form="to_user_id"),
-    4:string action_type(api.form="action_type", api.vd="$=='1' || $=='0'"),//1-关注，0-取消关注
+    3:string to_userid(api.form="to_userid"),
+    4:string to_username(api.form="to_username"),
+    5:string action_type(api.form="action_type", api.vd="$=='1' || $=='0'"),//1-关注，0-取消关注
 }
 
 struct FollowActionResp{
@@ -32,9 +33,8 @@ struct FollowActionResp{
 struct FollowListReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:string user_id(api.query="user_id"),
-    4:i32 page_num(api.query="page_num", api.vd="$>=0"),
-    5:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
+    3:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    4:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 
 struct FollowListResp{
@@ -45,9 +45,8 @@ struct FollowListResp{
 struct FollowerListReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:string user_id(api.query="user_id"),
-    4:i32 page_num(api.query="page_num", api.vd="$>=0"),
-    5:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
+    3:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    4:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 
 struct FollowerListResp{

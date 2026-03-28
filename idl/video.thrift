@@ -7,23 +7,24 @@ struct Base{
 }
 
 struct Data{
-    1:Item item,
+    1:list<Item> item,
     2:i32 total,
 }
 
 struct Item{
-    1:string video_id,
-    2:string user_id;
-    3:string video_url,
-    4:string cover_url,
-    5:string title,
-    6:string description,
-    7:i32 visit_count,
-    8:i32 like_count,
-    9:i32 comment_count,
-    10:string created_at,
-    11:string updated_at,
-    12:string deleted_at,
+    1:string username
+    2:string video_id,
+    3:string user_id,
+    4:string video_url,
+    5:string cover_url,
+    6:string title,
+    7:string description,
+    8:i32 visit_count,
+    9:i32 like_count,
+    10:i32 comment_count,
+    11:string created_at,
+    12:string updated_at,
+    13:string deleted_at,
 }
 
 //视频部分
@@ -44,7 +45,6 @@ struct ListReq{
     2:string refresh_token(api.header="refresh_token"),
     3:i32 page_num(api.query="page_num", api.vd="$>=0"),
     4:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
-    5:string user_id(api.query="user_id"),
 }
 
 struct ListResp{
@@ -67,10 +67,10 @@ struct PopularResp{
 struct SearchReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:string keyword(api.form="keyword"),
-    4:i32 page_num(api.form="page_num", api.vd="$>=0"),
-    5:i32 page_size(api.form="page_size", api.vd="$>=1 && $<=100"),
-    6:string username(api.form="username"),
+    3:string keyword(api.query="keyword"),
+    4:i32 page_num(api.query="page_num", api.vd="$>=0"),
+    5:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
+    6:string username(api.query="username"),
 }
 
 struct SearchResp{
@@ -82,5 +82,5 @@ service VideoService{
     PublishResp Publish(PublishReq req)(api.post="/video/publish")
     ListResp List(ListReq req)(api.get="/video/list")
     PopularResp Popular(PopularReq req)(api.get="/video/popular")
-    SearchResp Search(SearchReq req)(api.post="/video/search")
+    SearchResp Search(SearchReq req)(api.get="/video/search")
 }
