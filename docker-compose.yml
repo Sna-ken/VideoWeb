@@ -12,12 +12,26 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - video_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: video_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - video_network
 
   app:
     build: .
     container_name: video_app
     depends_on:
       - mysql
+      - redis
     ports:
       - "8888:8888"
     environment:
@@ -26,6 +40,16 @@ services:
       DB_USER: root
       DB_PASSWORD: root
       DB_NAME: videodb
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+    networks:
+      - video_network
 
 volumes:
   mysql_data:
+  redis_data:
+
+networks:
+  video_network:
+    driver: bridge

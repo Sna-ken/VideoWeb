@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . .
 
 RUN go mod tidy
-RUN go build -o app
+RUN go build -o app ./cmd
 
 FROM debian:bookworm-slim
 
