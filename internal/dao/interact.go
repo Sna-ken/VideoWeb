@@ -37,12 +37,12 @@ func UpdateVideoLike(ctx context.Context, videoID string, statu string) error {
 	return nil
 }
 
-func UpdateCommentLike(ctx context.Context, CommetID string, statu string) error {
+func UpdateCommentLike(ctx context.Context, commetID string, statu string) error {
 	if statu == "1" {
-		return config.MYSQLDB.WithContext(ctx).Model(&Comment{}).Where("id = ?", CommetID).Update("like_count", gorm.Expr("like_count + ?", 1)).Error
+		return config.MYSQLDB.WithContext(ctx).Model(&Comment{}).Where("id = ?", commetID).Update("like_count", gorm.Expr("like_count + ?", 1)).Error
 	}
 	if statu == "0" {
-		return config.MYSQLDB.WithContext(ctx).Model(&Comment{}).Where("id = ?", CommetID).Update("like_count", gorm.Expr("like_count - ?", 1)).Error
+		return config.MYSQLDB.WithContext(ctx).Model(&Comment{}).Where("id = ?", commetID).Update("like_count", gorm.Expr("like_count - ?", 1)).Error
 	}
 	return nil
 }
@@ -81,8 +81,8 @@ func FindCommentByVideoID(ctx context.Context, videoID string, offset int, pages
 	return config.MYSQLDB.WithContext(ctx).Where("video_id = ?", videoID).Offset(offset).Limit(pagesize).Find(comment).Error
 }
 
-func DeleteComment(ctx context.Context, CommentID string, userID string) error {
-	return config.MYSQLDB.WithContext(ctx).Where("user_id = ? AND id = ?", userID, CommentID).Delete(&Comment{}).Error
+func DeleteComment(ctx context.Context, commentID string, userID string) error {
+	return config.MYSQLDB.WithContext(ctx).Where("user_id = ? AND id = ?", userID, commentID).Delete(&Comment{}).Error
 }
 
 func FindVideoIDByCommentID(ctx context.Context, commentID string) (videoID string, err error) {
@@ -91,6 +91,6 @@ func FindVideoIDByCommentID(ctx context.Context, commentID string) (videoID stri
 	return videoID, err
 }
 
-func DeleteCommentLike(ctx context.Context, CommentID string) error {
-	return config.MYSQLDB.WithContext(ctx).Where("comment_id = ?", CommentID).Delete(&Like{}).Error
+func DeleteCommentLike(ctx context.Context, commentID string) error {
+	return config.MYSQLDB.WithContext(ctx).Where("comment_id = ?", commentID).Delete(&Like{}).Error
 }
