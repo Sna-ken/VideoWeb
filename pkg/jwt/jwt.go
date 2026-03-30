@@ -62,12 +62,12 @@ func ValidateAccessToken(tokenString string) (*Claims, error) {
 		return nil, err
 	}
 
-	cllaims, ok := token.Claims.(*Claims) //获取解析后的Claims
+	claims, ok := token.Claims.(*Claims) //获取解析后的Claims
 	if !ok || !token.Valid {
 		return nil, err
 	}
 
-	return cllaims, nil
+	return claims, nil
 }
 
 func ValidateRefreshToken(tokenString string) (*Claims, error) {
