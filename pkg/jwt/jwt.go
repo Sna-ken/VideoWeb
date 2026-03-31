@@ -64,7 +64,7 @@ func ValidateAccessToken(tokenString string) (*Claims, error) {
 
 	claims, ok := token.Claims.(*Claims) //获取解析后的Claims
 	if !ok || !token.Valid {
-		return nil, err
+		return nil, errors.New("claims invalid")
 	}
 
 	return claims, nil
@@ -81,10 +81,10 @@ func ValidateRefreshToken(tokenString string) (*Claims, error) {
 		return nil, err
 	}
 
-	cllaims, ok := token.Claims.(*Claims) //获取解析后的Claims
+	claims, ok := token.Claims.(*Claims) //获取解析后的Claims
 	if !ok || !token.Valid {
-		return nil, err
+		return nil, errors.New("claims invalid")
 	}
 
-	return cllaims, nil
+	return claims, nil
 }

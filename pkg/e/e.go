@@ -21,4 +21,5 @@ var (
 	ErrIDAndNameInconsistent  = errors.New("UserID and username are inconsistent")
 	ErrNoPermissionOrNotFound = errors.New("Permission denied or record not found")
 	ErrCanNotSelfFollow       = errors.New("Can't follow youself")
+	ErrLikeNotexisted         = errors.New("like not existed")
 )

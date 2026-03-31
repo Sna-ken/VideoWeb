@@ -35,7 +35,7 @@ func main() {
 	config.MYSQLDB.AutoMigrate(&dao.Comment{})
 	config.MYSQLDB.AutoMigrate(&dao.SocialObject{})
 
-	h.StaticFS("/static", &app.FS{Root: "./", GenerateIndexPages: true}) //root不要设置成./static T-T
+	h.StaticFS("/static", &app.FS{Root: "./", GenerateIndexPages: true})
 	h.StaticFS("/avatar", &app.FS{Root: "./static/", GenerateIndexPages: true})
 	h.StaticFS("/video", &app.FS{Root: "./static/", GenerateIndexPages: true})
 

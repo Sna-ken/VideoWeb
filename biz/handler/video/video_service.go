@@ -19,6 +19,12 @@ func Publish(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req video.PublishReq
 	coverfile, err := c.FormFile("cover")
+	if err != nil {
+		c.JSON(consts.StatusBadRequest, &video.PublishResp{
+			Base: &video.Base{Code: consts.StatusBadRequest, Msg: "Invalid input:" + err.Error()},
+		})
+		return
+	}
 	videofile, err := c.FormFile("video")
 	if err != nil {
 		c.JSON(consts.StatusBadRequest, &video.PublishResp{

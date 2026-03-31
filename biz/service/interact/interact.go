@@ -55,7 +55,7 @@ func (s *InteractService) LikeActionService(req *interact.LikeActionReq, userID 
 			}
 		}
 		if req.ActionType == "0" {
-			return e.ErrOperationRepeated
+			return e.ErrLikeNotexisted
 		}
 	} else {
 		if req.ActionType == "1" {

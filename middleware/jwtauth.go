@@ -53,8 +53,7 @@ func JWTAuth() app.HandlerFunc {
 
 		newAccess, _ := jwt.GenerateAccessToken(rfClaims.UserID)
 
-		c.Header("new_access_token", newAccess)
-
+		c.Header("access_token", newAccess)
 		c.Set("user_id", rfClaims.UserID)
 		c.Next(ctx)
 	}
