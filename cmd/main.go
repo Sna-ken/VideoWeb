@@ -3,14 +3,10 @@
 package main
 
 import (
-	"github.com/Sna-ken/videoweb/biz/handler/interact"
-	"github.com/Sna-ken/videoweb/biz/handler/social"
-	"github.com/Sna-ken/videoweb/biz/handler/user"
-	"github.com/Sna-ken/videoweb/biz/handler/video"
+	"github.com/Sna-ken/videoweb/biz/router"
+	"github.com/Sna-ken/videoweb/biz/router/static"
 	"github.com/Sna-ken/videoweb/config"
 	"github.com/Sna-ken/videoweb/internal/dao"
-	"github.com/Sna-ken/videoweb/middleware"
-	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
@@ -23,71 +19,25 @@ func main() {
 	}
 	if config.REDISDB == nil {
 		panic("Redis connection failed")
+
 	}
+
+	Init()
 
 	h := server.New(
 		server.WithMaxRequestBodySize(500 * 1024 * 1024), // 500MB
 	)
 
+	router.GeneratedRegister(h)
+	static.GeneratedRegisterStaticFS(h)
+
+	h.Spin()
+}
+
+func Init() {
 	config.MYSQLDB.AutoMigrate(&dao.User{})
 	config.MYSQLDB.AutoMigrate(&dao.Video{})
 	config.MYSQLDB.AutoMigrate(&dao.Like{})
 	config.MYSQLDB.AutoMigrate(&dao.Comment{})
 	config.MYSQLDB.AutoMigrate(&dao.SocialObject{})
-
-	h.StaticFS("/static", &app.FS{Root: "./", GenerateIndexPages: true})
-	h.StaticFS("/avatar", &app.FS{Root: "./static/", GenerateIndexPages: true})
-	h.StaticFS("/video", &app.FS{Root: "./static/", GenerateIndexPages: true})
-
-	//user
-	_userGroup := h.Group("/user")
-	{
-		_userGroup.POST("/register", user.Register)
-		_userGroup.POST("/login", user.Login)
-	}
-
-	_userAuthGroup := h.Group("/user").Use(middleware.JWTAuth())
-	{
-		_userAuthGroup.GET("/info", user.UserInfo)
-		_userAuthGroup.POST("/avatar", user.UploadAvatar)
-	}
-
-	//video
-	_videoGroup := h.Group("/video").Use(middleware.JWTAuth())
-	{
-		_videoGroup.POST("/publish", video.Publish)
-		_videoGroup.GET("/list", video.List)
-		_videoGroup.GET("/popular", video.Popular)
-		_videoGroup.GET("/search", video.Search)
-	}
-
-	//interact
-	_LikeGroup := h.Group("/like").Use(middleware.JWTAuth())
-	{
-		_LikeGroup.POST("/action", interact.LikeAction)
-		_LikeGroup.GET("/list", interact.LikeList)
-	}
-	_CommentGroup := h.Group("/comment").Use(middleware.JWTAuth())
-	{
-		_CommentGroup.POST("/publish", interact.CommentPublish)
-		_CommentGroup.GET("/list", interact.CommentList)
-		_CommentGroup.DELETE("/delete", interact.CommentDelete)
-	}
-
-	//socail
-	_FollowGroup := h.Group("/follow").Use(middleware.JWTAuth())
-	{
-		_FollowGroup.POST("/action", social.FollowAction)
-		_FollowGroup.GET("/list", social.FollowList)
-	}
-	_FollowerGroup := h.Group("/follower").Use(middleware.JWTAuth())
-	{
-		_FollowerGroup.GET("/list", social.FollowerList)
-	}
-	_FriendGroup := h.Group("/friend").Use(middleware.JWTAuth())
-	{
-		_FriendGroup.GET("/list", social.FriendList)
-	}
-
-	h.Spin()
 }

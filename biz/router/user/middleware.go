@@ -3,6 +3,7 @@
 package user
 
 import (
+	"github.com/Sna-ken/videoweb/middleware"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -17,13 +18,15 @@ func _userMw() []app.HandlerFunc {
 }
 
 func _uploadavatarMw() []app.HandlerFunc {
-	// your code...
-	return nil
+	return []app.HandlerFunc{
+		middleware.JWTAuth(),
+	}
 }
 
 func _userinfoMw() []app.HandlerFunc {
-	// your code...
-	return nil
+	return []app.HandlerFunc{
+		middleware.JWTAuth(),
+	}
 }
 
 func _loginMw() []app.HandlerFunc {

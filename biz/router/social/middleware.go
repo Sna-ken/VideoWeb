@@ -3,12 +3,14 @@
 package social
 
 import (
+	"github.com/Sna-ken/videoweb/middleware"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
 func rootMw() []app.HandlerFunc {
-	// your code...
-	return nil
+	return []app.HandlerFunc{
+		middleware.JWTAuth(),
+	}
 }
 
 func _followMw() []app.HandlerFunc {

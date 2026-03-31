@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const defaultAvatar = "http://127.0.0.1:8888/static/default-avatar.png"
+const defaultAvatar = "http://127.0.0.1:8888/static/avatar/default/default-avatar.png"
 
 type UserService struct {
 	ctx context.Context
