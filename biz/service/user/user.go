@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Sna-ken/videoweb/biz/model/user"
-	"github.com/Sna-ken/videoweb/config"
 	"github.com/Sna-ken/videoweb/internal/dao"
 	"github.com/Sna-ken/videoweb/pkg/e"
 	"github.com/Sna-ken/videoweb/pkg/jwt"
@@ -76,8 +75,7 @@ func (s *UserService) LoginService(req *user.LoginReq) (error, *user.LoginResp) 
 		return e.ErrGenerateToken, nil
 	}
 
-	duration := time.Duration(config.JWTConfig.RefreshTokenExpiry) * time.Second
-	if err := dao.SetRefreshToken(s.ctx, _user.ID, refreshtoken, duration); err != nil {
+	if err := dao.SetRefreshToken(s.ctx, _user.ID, refreshtoken); err != nil {
 		return e.ErrDB, nil
 	}
 

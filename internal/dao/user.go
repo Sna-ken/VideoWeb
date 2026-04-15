@@ -15,7 +15,8 @@ func FindUserByName(ctx context.Context, user *User, username string) error {
 	return config.MYSQLDB.WithContext(ctx).Where("username = ?", username).First(user).Error
 }
 
-func SetRefreshToken(ctx context.Context, userID string, refreshtoken string, duration time.Duration) error {
+func SetRefreshToken(ctx context.Context, userID string, refreshtoken string) error {
+	duration := time.Duration(config.JWT.RefreshTokenExpiry) * time.Second
 	return config.REDISDB.Set(ctx, "user_rftoken:"+userID, refreshtoken, duration).Err()
 }
 

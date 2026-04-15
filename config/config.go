@@ -1,57 +1,73 @@
 package config
 
 import (
-	"context"
-	"fmt"
 	"log"
-	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/redis/go-redis/v9"
-	"gorm.io/driver/mysql"
+	"github.com/spf13/viper"
 	"gorm.io/gorm"
 )
 
 var MYSQLDB *gorm.DB
 var REDISDB *redis.Client
 
-func InitMysql() {
-	DSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", Mysql.USERNAME, Mysql.PASSWORD, Mysql.HOST, Mysql.PORT, Mysql.NAME)
-	DBtemp, err := gorm.Open(mysql.Open(DSN), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database" + err.Error())
-	}
-
-	MYSQLDB = DBtemp
-	log.Println("Connected to MySQL")
+type MysqlConfig struct {
+	USERNAME string `mapstructure:"username"`
+	PASSWORD string `mapstructure:"password"`
+	HOST     string `mapstructure:"host"`
+	PORT     string `mapstructure:"port"`
+	NAME     string `mapstructure:"name"`
 }
 
-func InitRedis() {
-	DBtemp := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", Redis.HOST, Redis.PORT),
-		Password: Redis.PASSWORD,
-		DB:       Redis.DB,
+type RedisConfig struct {
+	HOST     string `mapstructure:"host"`
+	PORT     string `mapstructure:"port"`
+	PASSWORD string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
+}
+
+type JWTConfig struct {
+	AccessTokenSecret  string `mapstructure:"access_token_secret"`
+	RefreshTokenSecret string `mapstructure:"refresh_token_secret"`
+	AccessTokenExpiry  int64  `mapstructure:"access_token_expiry"`
+	RefreshTokenExpiry int64  `mapstructure:"refresh_token_expiry"`
+}
+
+var Mysql *MysqlConfig
+var Redis *RedisConfig
+var JWT *JWTConfig
+
+func main() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("read config fail: %v", err)
+	}
+
+	viper.WatchConfig()
+
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		log.Printf("config file changed: %s", e.Name)
+
+		if err := viper.ReadInConfig(); err != nil {
+			log.Printf("read config fail: %v", err)
+			return
+		}
+
+		log.Printf("config reloaded successfully")
 	})
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	_, err := DBtemp.Ping(ctx).Result()
-	if err != nil {
-		panic("failed to connect Redis" + err.Error())
+	if err := viper.Unmarshal(&Mysql); err != nil {
+		log.Fatalf("unmarshal mysql config fail: %v", err)
+	}
+	if err := viper.Unmarshal(&Redis); err != nil {
+		log.Fatalf("unmarshal redis config fail: %v", err)
+	}
+	if err := viper.Unmarshal(&JWT); err != nil {
+		log.Fatalf("unmarshal jwt config fail: %v", err)
 	}
 
-	REDISDB = DBtemp
-	log.Println("Connected to Redis")
-}
-
-var JWTConfig = struct {
-	AccessTokenSecret  string
-	RefreshTokenSecret string
-	AccessTokenExpiry  int64 // 秒为单位
-	RefreshTokenExpiry int64
-}{
-	AccessTokenSecret:  "your-access-token-secret-key",
-	RefreshTokenSecret: "your-refresh-token-secret-key",
-	AccessTokenExpiry:  180,    // 3分钟
-	RefreshTokenExpiry: 604800, // 7天
 }

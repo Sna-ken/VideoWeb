@@ -14,7 +14,7 @@ type Claims struct {
 }
 
 func GenerateAccessToken(userID string) (string, error) {
-	expirationTime := time.Now().Add(time.Second * time.Duration(config.JWTConfig.AccessTokenExpiry)).Unix() //token有效时间
+	expirationTime := time.Now().Add(time.Second * time.Duration(config.JWT.AccessTokenExpiry)).Unix() //token有效时间
 	claims := Claims{
 		UserID: userID,
 		StandardClaims: jwt.StandardClaims{
@@ -25,7 +25,7 @@ func GenerateAccessToken(userID string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) //用签名算法创建一个新token
 
-	signerToken, err := token.SignedString([]byte(config.JWTConfig.AccessTokenSecret)) //使用secretKey签名
+	signerToken, err := token.SignedString([]byte(config.JWT.AccessTokenSecret)) //使用secretKey签名
 	if err != nil {
 		return "", err
 	}
@@ -33,7 +33,7 @@ func GenerateAccessToken(userID string) (string, error) {
 }
 
 func GenerateRefreshToken(userID string) (string, error) {
-	expirationTime := time.Now().Add(time.Second * time.Duration(config.JWTConfig.RefreshTokenExpiry)).Unix() //token有效时间
+	expirationTime := time.Now().Add(time.Second * time.Duration(config.JWT.RefreshTokenExpiry)).Unix() //token有效时间
 	claims := Claims{
 		UserID: userID,
 		StandardClaims: jwt.StandardClaims{
@@ -44,7 +44,7 @@ func GenerateRefreshToken(userID string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) //用签名算法创建一个新token
 
-	signerToken, err := token.SignedString([]byte(config.JWTConfig.RefreshTokenSecret)) //使用secretKey签名
+	signerToken, err := token.SignedString([]byte(config.JWT.RefreshTokenSecret)) //使用secretKey签名
 	if err != nil {
 		return "", err
 	}
@@ -56,7 +56,7 @@ func ValidateAccessToken(tokenString string) (*Claims, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return []byte(config.JWTConfig.AccessTokenSecret), nil
+		return []byte(config.JWT.AccessTokenSecret), nil
 	})
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func ValidateRefreshToken(tokenString string) (*Claims, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return []byte(config.JWTConfig.RefreshTokenSecret), nil
+		return []byte(config.JWT.RefreshTokenSecret), nil
 	})
 	if err != nil {
 		return nil, err
