@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	config.Init()
 	config.InitMysql()
 	config.InitRedis()
 

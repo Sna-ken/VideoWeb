@@ -24,26 +24,6 @@ services:
     networks:
       - video_network
 
-  app:
-    build: .
-    container_name: video_app
-    depends_on:
-      - mysql
-      - redis
-    ports:
-      - "8888:8888"
-    environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: root
-      DB_NAME: videodb
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ""
-    networks:
-      - video_network
-
 volumes:
   mysql_data:
   redis_data:

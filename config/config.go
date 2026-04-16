@@ -2,6 +2,8 @@ package config
 
 import (
 	"log"
+	"path/filepath"
+	"runtime"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/redis/go-redis/v9"
@@ -38,10 +40,13 @@ var Mysql *MysqlConfig
 var Redis *RedisConfig
 var JWT *JWTConfig
 
-func main() {
+func Init() {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(filename)
+
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(dir)
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("read config fail: %v", err)
@@ -60,13 +65,13 @@ func main() {
 		log.Printf("config reloaded successfully")
 	})
 
-	if err := viper.Unmarshal(&Mysql); err != nil {
+	if err := viper.Sub("mysql").Unmarshal(&Mysql); err != nil {
 		log.Fatalf("unmarshal mysql config fail: %v", err)
 	}
-	if err := viper.Unmarshal(&Redis); err != nil {
+	if err := viper.Sub("redis").Unmarshal(&Redis); err != nil {
 		log.Fatalf("unmarshal redis config fail: %v", err)
 	}
-	if err := viper.Unmarshal(&JWT); err != nil {
+	if err := viper.Sub("jwt").Unmarshal(&JWT); err != nil {
 		log.Fatalf("unmarshal jwt config fail: %v", err)
 	}
 

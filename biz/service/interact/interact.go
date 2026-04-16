@@ -22,10 +22,10 @@ func NewInteractService(ctx context.Context) *InteractService {
 }
 
 func (s *InteractService) LikeActionService(req *interact.LikeActionReq, userID string) error {
-	hasVideoId := req.VideoID != ""
-	hasCommentId := req.CommentID != ""
+	hasVideoID := req.VideoID != ""
+	hasCommentID := req.CommentID != ""
 
-	if hasVideoId == hasCommentId {
+	if hasVideoID == hasCommentID {
 		return errors.New("only choose one between video_id and comment_id ")
 	}
 
@@ -36,7 +36,7 @@ func (s *InteractService) LikeActionService(req *interact.LikeActionReq, userID 
 	var _like model.Like
 	var err error
 
-	if hasVideoId {
+	if hasVideoID {
 		err = dao.FindLikeByUserIDAndVideoID(s.ctx, &_like, userID, req.VideoID)
 	} else {
 		err = dao.FindLikeByUserIDAndCommentID(s.ctx, &_like, userID, req.CommentID)
@@ -146,16 +146,42 @@ func (s *InteractService) CommentPublishService(req *interact.CommentPublishReq,
 		return e.ErrUserIDNotFound
 	}
 
+	hasVideoID := req.VideoID != ""
+	hasParentID := req.ParentID != ""
+
+	if hasVideoID == hasParentID {
+		return errors.New("only choose one between video_id and parent_id ")
+	}
+
 	username, err := dao.FindUsernameByID(s.ctx, userID)
 	if err != nil {
 		return e.ErrUserNotFound
+	}
+
+	var rootID string
+	var videoID string
+
+	if hasVideoID {
+		rootID = ""
+		videoID = req.VideoID
+	} else {
+		rootID, err = dao.FindRootIDByParentID(s.ctx, req.ParentID)
+		if err != nil {
+			return e.ErrDB
+		}
+		videoID, err = dao.FindVideoIDByCommentID(s.ctx, req.ParentID)
+		if err != nil {
+			return e.ErrDB
+		}
 	}
 
 	_comment := model.Comment{
 		UserName:  username,
 		UserID:    userID,
 		ID:        uuid.NewString(),
-		VideoID:   req.VideoID,
+		VideoID:   videoID,
+		Root_ID:   rootID,
+		Parent_ID: req.ParentID,
 		Content:   req.Content,
 		Create_at: time.Now(),
 		Update_at: time.Now(),
@@ -165,8 +191,19 @@ func (s *InteractService) CommentPublishService(req *interact.CommentPublishReq,
 		return e.ErrDB
 	}
 
-	if err := dao.AddCommentCount(s.ctx, req.VideoID); err != nil {
+	if err := dao.AddVideoCommentCount(s.ctx, videoID, 1); err != nil {
 		return e.ErrDB
+	}
+
+	if hasParentID {
+		if err := dao.AddChildCommentCount(s.ctx, req.ParentID, 1); err != nil {
+			return e.ErrDB
+		}
+		if rootID != req.ParentID {
+			if err := dao.AddChildCommentCount(s.ctx, rootID, 1); err != nil {
+				return e.ErrDB
+			}
+		}
 	}
 
 	return nil
@@ -176,21 +213,37 @@ func (s *InteractService) CommentListService(req *interact.CommentListReq) (erro
 	offset := int((req.PageNum - 1) * req.PageSize)
 	var _commentList []model.Comment
 
-	if err := dao.FindCommentByVideoID(s.ctx, req.VideoID, offset, int(req.PageSize), &_commentList); err != nil {
-		return e.ErrDB, nil
+	hasVideoID := req.VideoID != ""
+	hasRootCommentID := req.RootCommentID != ""
+
+	if hasVideoID == hasRootCommentID {
+		return errors.New("only choose one between video_id and parent_id "), nil
+	}
+
+	if hasVideoID {
+		if err := dao.FindRootCommentByVideoID(s.ctx, req.VideoID, offset, int(req.PageSize), &_commentList); err != nil {
+			return e.ErrDB, nil
+		}
+	} else {
+		if err := dao.FindCommentByRootCommentID(s.ctx, req.RootCommentID, offset, int(req.PageSize), &_commentList); err != nil {
+			return e.ErrDB, nil
+		}
 	}
 
 	items := make([]*interact.CommentItem, 0, len(_commentList))
 
 	for _, v := range _commentList {
 		item := &interact.CommentItem{
-			Username:  v.UserName,
-			CommentID: v.ID,
-			VideoID:   v.VideoID,
-			UserID:    v.UserID,
-			Content:   v.Content,
-			LikeCount: v.Like_count,
-			CreatedAt: v.Create_at.Format(time.DateTime),
+			Username:   v.UserName,
+			CommentID:  v.ID,
+			VideoID:    v.VideoID,
+			UserID:     v.UserID,
+			RootID:     v.Root_ID,
+			ParentID:   v.Parent_ID,
+			Content:    v.Content,
+			LikeCount:  v.Like_count,
+			ChildCount: v.Child_count,
+			CreatedAt:  v.Create_at.Format(time.DateTime),
 		}
 		items = append(items, item)
 	}
@@ -209,15 +262,50 @@ func (s *InteractService) CommentDeleteService(req *interact.CommentDeleteReq, u
 		return e.ErrDB
 	}
 
+	rootID, err := dao.FindRootIDByCommentID(s.ctx, req.CommentID)
+	if err != nil {
+		return e.ErrDB
+	}
+
+	parentID, err := dao.FindParentIDByCommentID(s.ctx, req.CommentID)
+	if err != nil {
+		return e.ErrDB
+	}
+
+	// 删除
+	var deletecnt, childcnt int
 	if err := dao.DeleteComment(s.ctx, req.CommentID, userID); err != nil {
 		return e.ErrNoPermissionOrNotFound
 	}
-
-	if err := dao.ReduceCommentCount(s.ctx, videoID); err != nil {
-		return e.ErrDB
-	}
 	if err := dao.DeleteCommentLike(s.ctx, req.CommentID); err != nil {
 		return e.ErrDB
+	}
+
+	deletecnt = 1
+	// 只有删除根评论时才删除所有子评论，如果是删除子评论，不删除其下的子评论
+	if rootID == "" {
+		if childcnt, err = dao.DeleteChildCommentByRootID(s.ctx, req.CommentID); err != nil {
+			return e.ErrNoPermissionOrNotFound
+		}
+		if err := dao.DeleteCommentLikeByRootID(s.ctx, req.CommentID); err != nil {
+			return e.ErrDB
+		}
+		deletecnt += childcnt
+	}
+
+	// 更新评论数
+	if err := dao.ReduceVideoCommentCount(s.ctx, videoID, deletecnt); err != nil {
+		return e.ErrDB
+	}
+	if parentID != "" {
+		if err := dao.ReduceChildCommentCount(s.ctx, parentID, 1); err != nil {
+			return e.ErrDB
+		}
+	}
+	if rootID != "" && rootID != parentID {
+		if err := dao.ReduceChildCommentCount(s.ctx, rootID, 1); err != nil {
+			return e.ErrDB
+		}
 	}
 
 	return nil

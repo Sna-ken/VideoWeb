@@ -27,11 +27,14 @@ struct CommentItem{
     2:string comment_id
     3:string video_id,
     4:string user_id,
-    5:string content,
-    6:i32 like_count,
-    7:string created_at,
-    8:string updated_at,
-    9:string deleted_at,
+    5:string root_id,
+    6:string parent_id,
+    7:string content,
+    8:i32 like_count,
+    9:i32 child_count
+    10:string created_at,
+    11:string updated_at,
+    12:string deleted_at,
 }
 
 struct Data{
@@ -74,8 +77,9 @@ struct LikeListResp{
 struct CommentPublishReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:string video_id(api.form="video_id", api.vd="len($)>0"),
-    4:string content(api.form="content", api.vd="len($)>0 && len($)<=200"),    
+    3:string video_id(api.form="video_id"),
+    4: string parent_id(api.form="parent_id"),
+    5:string content(api.form="content", api.vd="len($)>0 && len($)<=200"),    
 }
 
 struct CommentPublishResp{
@@ -85,9 +89,10 @@ struct CommentPublishResp{
 struct CommentListReq{
     1:string access_token(api.header="access_token"),
     2:string refresh_token(api.header="refresh_token"),
-    3:string video_id(api.query="video_id", api.vd="len($)>0"),
-    4:i32 page_num(api.query="page_num", api.vd="$>=1"),
-    5:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
+    3:string video_id(api.query="video_id"),
+    4:string root_comment_id(api.query="root_comment_id"),
+    5:i32 page_num(api.query="page_num", api.vd="$>=1"),
+    6:i32 page_size(api.query="page_size", api.vd="$>=1 && $<=100"),
 }
 
 struct CommentListResp{
