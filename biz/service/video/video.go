@@ -9,6 +9,7 @@ import (
 
 	"github.com/Sna-ken/videoweb/biz/model/video"
 	"github.com/Sna-ken/videoweb/internal/dao"
+	"github.com/Sna-ken/videoweb/internal/model"
 	"github.com/Sna-ken/videoweb/pkg/e"
 	"github.com/Sna-ken/videoweb/pkg/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -65,7 +66,7 @@ func (s *VideoService) PublishService(req *video.PublishReq, userID string, cove
 		return e.ErrFileSaveFailed
 	}
 
-	_video := dao.Video{
+	_video := model.Video{
 		UserName:    username,
 		ID:          uuid.New().String(),
 		UserID:      userID,
@@ -86,7 +87,7 @@ func (s *VideoService) PublishService(req *video.PublishReq, userID string, cove
 func (s *VideoService) ListService(req *video.ListReq, userID string) (error, *video.ListResp) {
 	offset := int((req.PageNum - 1) * req.PageSize)
 
-	var _videoList []dao.Video
+	var _videoList []model.Video
 	if userID == "" {
 		return e.ErrUserIDNotFound, nil
 	}
@@ -120,7 +121,7 @@ func (s *VideoService) ListService(req *video.ListReq, userID string) (error, *v
 
 func (s *VideoService) PopularService(req *video.PopularReq) (error, *video.PopularResp) {
 	offset := int((req.PageNum - 1) * req.PageSize)
-	var _videoList []dao.Video
+	var _videoList []model.Video
 
 	if err := dao.OrderPopular(s.ctx, &_videoList, offset, int(req.PageSize)); err != nil {
 		return e.ErrDB, nil
@@ -150,7 +151,7 @@ func (s *VideoService) PopularService(req *video.PopularReq) (error, *video.Popu
 
 func (s *VideoService) SearchService(req *video.SearchReq) (error, *video.SearchResp) {
 	offset := int((req.PageNum - 1) * req.PageSize)
-	var _videoList []dao.Video
+	var _videoList []model.Video
 	if req.Keyword != "" {
 		err := dao.SearchByKeyword(s.ctx, &_videoList, offset, int(req.PageSize), req.Keyword)
 		if err != nil {

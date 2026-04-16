@@ -7,6 +7,7 @@ import (
 
 	"github.com/Sna-ken/videoweb/biz/model/interact"
 	"github.com/Sna-ken/videoweb/internal/dao"
+	"github.com/Sna-ken/videoweb/internal/model"
 	"github.com/Sna-ken/videoweb/pkg/e"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/google/uuid"
@@ -32,7 +33,7 @@ func (s *InteractService) LikeActionService(req *interact.LikeActionReq, userID 
 		return e.ErrUserNotFound
 	}
 
-	var _like dao.Like
+	var _like model.Like
 	var err error
 
 	if hasVideoId {
@@ -43,7 +44,7 @@ func (s *InteractService) LikeActionService(req *interact.LikeActionReq, userID 
 
 	if err != nil {
 		if req.ActionType == "1" {
-			_like = dao.Like{
+			_like = model.Like{
 				ID:        uuid.NewString(),
 				UserID:    userID,
 				VideoID:   req.VideoID,
@@ -91,7 +92,7 @@ func (s *InteractService) LikeActionService(req *interact.LikeActionReq, userID 
 func (s *InteractService) LikeListService(req *interact.LikeListReq) (error, *interact.LikeListResp) {
 	offset := int((req.PageNum - 1) * req.PageSize)
 
-	var _videoList []dao.Video
+	var _videoList []model.Video
 	var userID string
 	var err error
 
@@ -150,7 +151,7 @@ func (s *InteractService) CommentPublishService(req *interact.CommentPublishReq,
 		return e.ErrUserNotFound
 	}
 
-	_comment := dao.Comment{
+	_comment := model.Comment{
 		UserName:  username,
 		UserID:    userID,
 		ID:        uuid.NewString(),
@@ -173,7 +174,7 @@ func (s *InteractService) CommentPublishService(req *interact.CommentPublishReq,
 
 func (s *InteractService) CommentListService(req *interact.CommentListReq) (error, *interact.CommentListResp) {
 	offset := int((req.PageNum - 1) * req.PageSize)
-	var _commentList []dao.Comment
+	var _commentList []model.Comment
 
 	if err := dao.FindCommentByVideoID(s.ctx, req.VideoID, offset, int(req.PageSize), &_commentList); err != nil {
 		return e.ErrDB, nil

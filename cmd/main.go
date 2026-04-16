@@ -6,7 +6,6 @@ import (
 	"github.com/Sna-ken/videoweb/biz/router"
 	"github.com/Sna-ken/videoweb/biz/router/static"
 	"github.com/Sna-ken/videoweb/config"
-	"github.com/Sna-ken/videoweb/internal/dao"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
@@ -22,7 +21,7 @@ func main() {
 
 	}
 
-	Init()
+	config.InitTable()
 
 	h := server.New(
 		server.WithMaxRequestBodySize(500 * 1024 * 1024), // 500MB
@@ -32,12 +31,4 @@ func main() {
 	static.GeneratedRegisterStaticFS(h)
 
 	h.Spin()
-}
-
-func Init() {
-	config.MYSQLDB.AutoMigrate(&dao.User{})
-	config.MYSQLDB.AutoMigrate(&dao.Video{})
-	config.MYSQLDB.AutoMigrate(&dao.Like{})
-	config.MYSQLDB.AutoMigrate(&dao.Comment{})
-	config.MYSQLDB.AutoMigrate(&dao.SocialObject{})
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/Sna-ken/videoweb/biz/model/user"
 	"github.com/Sna-ken/videoweb/internal/dao"
+	"github.com/Sna-ken/videoweb/internal/model"
 	"github.com/Sna-ken/videoweb/pkg/e"
 	"github.com/Sna-ken/videoweb/pkg/jwt"
 	"github.com/Sna-ken/videoweb/pkg/utils"
@@ -27,7 +28,7 @@ func NewUserService(ctx context.Context) *UserService {
 }
 
 func (s *UserService) RegisterService(req *user.RegisterReq) error {
-	var tempUser dao.User
+	var tempUser model.User
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return e.ErrHasedPassword
@@ -38,7 +39,7 @@ func (s *UserService) RegisterService(req *user.RegisterReq) error {
 		return e.ErrUserHasExisted
 	} //先通过校检再初始化，FindUser和CreateUser不要重复使用同样的变量
 
-	_user := dao.User{
+	_user := model.User{
 		ID:         uuid.New().String(),
 		Username:   req.Username,
 		Password:   req.Password,
@@ -55,7 +56,7 @@ func (s *UserService) RegisterService(req *user.RegisterReq) error {
 }
 
 func (s *UserService) LoginService(req *user.LoginReq) (error, *user.LoginResp) {
-	var _user dao.User
+	var _user model.User
 
 	if err := dao.FindUserByName(s.ctx, &_user, req.Username); err == gorm.ErrRecordNotFound {
 		return e.ErrUserNotFound, nil
@@ -104,7 +105,7 @@ func (s *UserService) UserInfoService(req *user.UserInfoReq, userID string) (err
 		return e.ErrUserIDNotFound, nil
 	}
 
-	var _user dao.User
+	var _user model.User
 	if err := dao.FindUserByID(s.ctx, &_user, userID); err != nil {
 		if err.Error() == "record not found" {
 			return e.ErrUserNotFound, nil
@@ -152,7 +153,7 @@ func (s *UserService) UploadAvatarService(req *user.UploadAvatarReq, userID stri
 	if len(avatarBytes) == 0 {
 		return e.ErrFileRequired
 	}
-	var _user dao.User
+	var _user model.User
 	if err := dao.FindUserByID(s.ctx, &_user, userID); err != nil {
 		if err.Error() == "record not found" {
 			return e.ErrUserNotFound

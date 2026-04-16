@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Sna-ken/videoweb/internal/model"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -39,4 +40,12 @@ func InitRedis() {
 
 	REDISDB = DBtemp
 	log.Println("Connected to Redis")
+}
+
+func InitTable() {
+	MYSQLDB.AutoMigrate(&model.User{})
+	MYSQLDB.AutoMigrate(&model.Video{})
+	MYSQLDB.AutoMigrate(&model.Like{})
+	MYSQLDB.AutoMigrate(&model.Comment{})
+	MYSQLDB.AutoMigrate(&model.SocialObject{})
 }

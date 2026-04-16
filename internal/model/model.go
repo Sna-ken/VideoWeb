@@ -1,4 +1,4 @@
-package dao
+package model
 
 import "time"
 
@@ -37,15 +37,17 @@ type Like struct {
 }
 
 type Comment struct {
-	UserName   string     `json:"username" gorm:"not null"`
-	ID         string     `json:"id" gorm:"primaryKey;comment:comment_id"`
-	UserID     string     `json:"user_id" gorm:"not null;comment:user_id"`
-	VideoID    string     `json:"video_id" gorm:"not null;comment:video_id"`
-	Like_count int32      `json:"like_count" gorm:"not null;default:0;check:like_count >= 0"`
-	Content    string     `json:"content" gorm:"not null"`
-	Create_at  time.Time  `json:"create_at"`
-	Update_at  time.Time  `json:"update_at"`
-	Delete_at  *time.Time `json:"delete_at"`
+	UserName    string     `json:"username" gorm:"not null"`
+	ID          string     `json:"id" gorm:"primaryKey;comment:comment_id"`
+	UserID      string     `json:"user_id" gorm:"not null;comment:user_id"`
+	VideoID     string     `json:"video_id" gorm:"not null;comment:video_id"`
+	CommentID   string     `json:"comment_id" gorm:";comment:comment_id"`
+	Like_count  int32      `json:"like_count" gorm:"not null;default:0;check:like_count >= 0"`
+	Child_count int32      `json:"child_count" gorm:"not null;default:0;check:child_count >= 0"`
+	Content     string     `json:"content" gorm:"not null"`
+	Create_at   time.Time  `json:"create_at"`
+	Update_at   time.Time  `json:"update_at"`
+	Delete_at   *time.Time `json:"delete_at"`
 }
 
 type SocialObject struct {

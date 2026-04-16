@@ -5,6 +5,7 @@ import (
 
 	"github.com/Sna-ken/videoweb/biz/model/social"
 	"github.com/Sna-ken/videoweb/internal/dao"
+	"github.com/Sna-ken/videoweb/internal/model"
 	"github.com/Sna-ken/videoweb/pkg/e"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/google/uuid"
@@ -26,7 +27,7 @@ func (s *SocialService) FollowActionService(req *social.FollowActionReq, userID 
 	var toUserID string
 	var toUserName string
 	var err error
-	var _object dao.SocialObject
+	var _object model.SocialObject
 	if req.ToUserid != "" && req.ToUsername != "" {
 		_toUserID, err := dao.FindUserIDByName(s.ctx, req.ToUsername)
 		if err != nil {
@@ -66,7 +67,7 @@ func (s *SocialService) FollowActionService(req *social.FollowActionReq, userID 
 
 	if err = dao.FindSocialObject(s.ctx, &_object, userID, toUserID); err != nil {
 		if req.ActionType == "1" {
-			_object = dao.SocialObject{
+			_object = model.SocialObject{
 				ID:         uuid.NewString(),
 				UserID:     userID,
 				ObjectID:   toUserID,
@@ -97,7 +98,7 @@ func (s *SocialService) FollowActionService(req *social.FollowActionReq, userID 
 func (s *SocialService) FollowListService(req *social.FollowListReq, userID string) (error, *social.FollowListResp) {
 	offset := int((req.PageNum - 1) * req.PageSize)
 
-	var _objectList []dao.SocialObject
+	var _objectList []model.SocialObject
 
 	if err := dao.FindFollowByUserID(s.ctx, userID, offset, int(req.PageSize), &_objectList); err != nil {
 		return e.ErrDB, nil
@@ -122,7 +123,7 @@ func (s *SocialService) FollowListService(req *social.FollowListReq, userID stri
 func (s *SocialService) FollowerListService(req *social.FollowerListReq, userID string) (error, *social.FollowerListResp) {
 	offset := int((req.PageNum - 1) * req.PageSize)
 
-	var _objectList []dao.SocialObject
+	var _objectList []model.SocialObject
 
 	if err := dao.FindFollowerByUserID(s.ctx, userID, offset, int(req.PageSize), &_objectList); err != nil {
 		return e.ErrDB, nil
@@ -146,7 +147,7 @@ func (s *SocialService) FollowerListService(req *social.FollowerListReq, userID 
 func (s *SocialService) FriendListService(req *social.FriendListReq, userID string) (error, *social.FriendListResp) {
 	offset := int((req.PageNum - 1) * req.PageSize)
 
-	var _objectList []dao.SocialObject
+	var _objectList []model.SocialObject
 	if err := dao.FindFriendByUserID(s.ctx, userID, offset, int(req.PageSize), &_objectList); err != nil {
 		return e.ErrDB, nil
 	}

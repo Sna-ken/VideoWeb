@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Sna-ken/videoweb/config"
+	"github.com/Sna-ken/videoweb/internal/model"
 )
 
 func FindAvatarByUserID(ctx context.Context, userID string) (avatarURL string, err error) {
@@ -12,29 +13,29 @@ func FindAvatarByUserID(ctx context.Context, userID string) (avatarURL string, e
 	return avatarURL, err
 }
 
-func FindSocialObject(ctx context.Context, object *SocialObject, userID string, ToUserID string) error {
+func FindSocialObject(ctx context.Context, object *model.SocialObject, userID string, ToUserID string) error {
 	return config.MYSQLDB.WithContext(ctx).Where("user_id = ? AND object_id = ?", userID, ToUserID).First(object).Error
 }
 
-func CreateSocialObject(ctx context.Context, object *SocialObject) error {
+func CreateSocialObject(ctx context.Context, object *model.SocialObject) error {
 	return config.MYSQLDB.WithContext(ctx).Create(object).Error
 }
 
 func RemoveSocialObject(ctx context.Context, userID string, ToUserID string) error {
-	return config.MYSQLDB.WithContext(ctx).Where("user_id = ? AND object_id = ?", userID, ToUserID).Delete(&SocialObject{}).Error
+	return config.MYSQLDB.WithContext(ctx).Where("user_id = ? AND object_id = ?", userID, ToUserID).Delete(&model.SocialObject{}).Error
 }
 
-func FindFollowByUserID(ctx context.Context, userID string, offset int, pagesize int, object *[]SocialObject) error {
+func FindFollowByUserID(ctx context.Context, userID string, offset int, pagesize int, object *[]model.SocialObject) error {
 	return config.MYSQLDB.WithContext(ctx).Where("user_id = ?", userID).Offset(offset).Limit(pagesize).Find(object).Error
 }
 
-func FindFollowerByUserID(ctx context.Context, userID string, offset int, pagesize int, object *[]SocialObject) error {
+func FindFollowerByUserID(ctx context.Context, userID string, offset int, pagesize int, object *[]model.SocialObject) error {
 	return config.MYSQLDB.WithContext(ctx).Table("social_objects").Select("users.id as user_id, users.username,users.avatar_url").
 		Joins("JOIN users ON social_objects.user_id = users.id").
 		Where("social_objects.object_id = ?", userID).Offset(offset).Limit(pagesize).Find(object).Error
 }
 
-func FindFriendByUserID(ctx context.Context, userID string, offset int, pagesize int, object *[]SocialObject) error {
+func FindFriendByUserID(ctx context.Context, userID string, offset int, pagesize int, object *[]model.SocialObject) error {
 	return config.MYSQLDB.WithContext(ctx).Table("social_objects as o1").Select("o1.*").
 		Joins("JOIN social_objects as o2 ON o1.user_id = o2.object_id AND o1.object_id = o2.user_id").
 		Where("o1.user_id = ?", userID).Offset(offset).Limit(pagesize).Find(object).Error
