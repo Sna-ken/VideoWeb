@@ -26,7 +26,11 @@ func (s *InteractService) LikeActionService(req *interact.LikeActionReq, userID 
 	hasCommentID := req.CommentID != ""
 
 	if hasVideoID == hasCommentID {
-		return errors.New("only choose one between video_id and comment_id ")
+		if hasVideoID {
+			return errors.New("only choose one between video_id and comment_id ")
+		} else {
+			return errors.New("video_id and comment_id can't be both empty ")
+		}
 	}
 
 	if userID == "" {
@@ -150,7 +154,11 @@ func (s *InteractService) CommentPublishService(req *interact.CommentPublishReq,
 	hasParentID := req.ParentID != ""
 
 	if hasVideoID == hasParentID {
-		return errors.New("only choose one between video_id and parent_id ")
+		if hasVideoID {
+			return errors.New("only choose one between video_id and parent_id ")
+		} else {
+			return errors.New("video_id and parent_id can't be both empty ")
+		}
 	}
 
 	username, err := dao.FindUsernameByID(s.ctx, userID)
@@ -217,7 +225,11 @@ func (s *InteractService) CommentListService(req *interact.CommentListReq) (erro
 	hasRootCommentID := req.RootCommentID != ""
 
 	if hasVideoID == hasRootCommentID {
-		return errors.New("only choose one between video_id and parent_id "), nil
+		if hasVideoID {
+			return errors.New("only choose one between video_id and root_comment_id "), nil
+		} else {
+			return errors.New("video_id and root_comment_id can't be both empty "), nil
+		}
 	}
 
 	if hasVideoID {
