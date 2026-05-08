@@ -28,6 +28,19 @@ struct RegisterResp{
 struct LoginReq{
     1:string username(api.form="username"),
     2:string password(api.form="password"),
+    3:string code(api.form="code"),//MFA验证码
+    4:bool mfa_enabled(api.form="mfa_enabled"),//是否启用MFA
+}
+
+struct GetMFAqrReq{
+    1:string access_token(api.header="access_token"),
+    2:string refresh_token(api.header="refresh_token"),
+}
+
+struct BindMFAReq{
+    1:string access_token(api.header="access_token"),
+    2:string refresh_token(api.header="refresh_token"),
+    3:string code(api.form="code"),
 }
 
 struct LoginResp{
@@ -58,9 +71,19 @@ struct UploadAvatarResp{
    1:Base base,
 }
 
+struct GetMFAqrResp{
+    1:Base base,
+    2:string qrcode,
+}
+
+struct BindMFAResp{
+    1:Base base,
+}
 service UserService{
     RegisterResp Register(1:RegisterReq req)(api.post="/user/register")
     LoginResp Login(1:LoginReq req)(api.post="/user/login")
     UserInfoResp UserInfo(1:UserInfoReq req)(api.get="/user/info")
     UploadAvatarResp UploadAvatar(1:UploadAvatarReq req)(api.post="/user/avatar" )
+    GetMFAqrResp GetMFAqr(1:GetMFAqrReq req)(api.get="/user/mfa/qrcode")
+    BindMFAResp BindMFA(1:BindMFAReq req)(api.post="/user/mfa/bind")
 }

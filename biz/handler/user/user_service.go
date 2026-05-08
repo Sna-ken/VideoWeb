@@ -97,6 +97,11 @@ func Login(ctx context.Context, c *app.RequestContext) {
 				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "Login failed:" + err.Error()},
 			})
 			return
+		case errors.Is(err, e.ErrMFARequired):
+			c.JSON(consts.StatusBadRequest, &user.LoginResp{
+				Base: &user.Base{Code: consts.StatusBadRequest, Msg: "Login failed:" + err.Error()},
+			})
+			return
 		}
 	}
 
@@ -200,5 +205,99 @@ func UploadAvatar(ctx context.Context, c *app.RequestContext) {
 
 	c.JSON(consts.StatusOK, &user.UploadAvatarResp{
 		Base: &user.Base{Code: consts.StatusOK, Msg: "avatar upload successfully"},
+	})
+}
+
+// GetMFAqr .
+// @router /user/mfa/qrcode [GET]
+func GetMFAqr(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req user.GetMFAqrReq
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.JSON(consts.StatusBadRequest, &user.GetMFAqrResp{
+			Base: &user.Base{Code: consts.StatusBadRequest, Msg: "Invalid input:" + err.Error()},
+		})
+		return
+	}
+
+	userService := service.NewUserService(ctx)
+	userID := c.GetString("user_id")
+	err, resp := userService.GetMFAqrService(&req, userID)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrUserIDNotFound):
+			c.JSON(consts.StatusUnauthorized, &user.GetMFAqrResp{
+				Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "get MFA qr failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrMFAGenerateFailed):
+			c.JSON(consts.StatusInternalServerError, &user.GetMFAqrResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "get MFA qr failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &user.GetMFAqrResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "get MFA qr failed:" + err.Error()},
+			})
+			return
+
+		}
+	}
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// BindMFA .
+// @router /user/mfa/bind [POST]
+func BindMFA(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req user.BindMFAReq
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.JSON(consts.StatusBadRequest, &user.BindMFAResp{
+			Base: &user.Base{Code: consts.StatusBadRequest, Msg: "Invalid input:" + err.Error()},
+		})
+		return
+	}
+
+	userService := service.NewUserService(ctx)
+	userID := c.GetString("user_id")
+	err = userService.BindMFAService(&req, userID)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, e.ErrUserIDNotFound):
+			c.JSON(consts.StatusUnauthorized, &user.BindMFAResp{
+				Base: &user.Base{Code: consts.StatusUnauthorized, Msg: "bind MFA failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrMFAInvalid):
+			c.JSON(consts.StatusBadRequest, &user.BindMFAResp{
+				Base: &user.Base{Code: consts.StatusBadRequest, Msg: "bind MFA failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrMFAExpired):
+			c.JSON(consts.StatusBadRequest, &user.BindMFAResp{
+				Base: &user.Base{Code: consts.StatusBadRequest, Msg: "bind MFA failed:" + err.Error()},
+			})
+			return
+
+		case errors.Is(err, e.ErrDB):
+			c.JSON(consts.StatusInternalServerError, &user.BindMFAResp{
+				Base: &user.Base{Code: consts.StatusInternalServerError, Msg: "bind MFA failed:" + err.Error()},
+			})
+			return
+
+		}
+	}
+
+	c.JSON(consts.StatusOK, user.BindMFAResp{
+		Base: &user.Base{Code: consts.StatusOK, Msg: "bind MFA successfully"},
 	})
 }

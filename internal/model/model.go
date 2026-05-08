@@ -7,6 +7,8 @@ type User struct {
 	Username   string     `json:"username" gorm:"unique;not null"`
 	Password   string     `json:"password" gorm:"not null"`
 	Avatar_url string     `json:"avatar_url" gorm:"not null"`
+	MFASecret  string     `json:"mfa_secret" gorm:"not null;default:''"`
+	MFAEnabled bool       `json:"mfa_enabled" gorm:"not null;default:false"`
 	Create_at  time.Time  `json:"create_at"`
 	Update_at  time.Time  `json:"update_at"`
 	Delete_at  *time.Time `json:"delete_at"`

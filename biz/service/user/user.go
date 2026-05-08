@@ -66,6 +66,16 @@ func (s *UserService) LoginService(req *user.LoginReq) (error, *user.LoginResp) 
 		return e.ErrWrongPassword, nil
 	}
 
+	if req.MfaEnabled {
+		if !_user.MFAEnabled {
+			return e.ErrMFARequired, nil
+		}
+
+		if !utils.ValidateMFA(req.Code, _user.MFASecret) {
+			return e.ErrMFAInvalid, nil
+		}
+	}
+
 	accesstoken, err := jwt.GenerateAccessToken(_user.ID)
 	if err != nil {
 		return e.ErrGenerateToken, nil
@@ -167,6 +177,55 @@ func (s *UserService) UploadAvatarService(req *user.UploadAvatarReq, userID stri
 	}
 
 	if err := dao.UpdateUserAvatar(s.ctx, userID, avatarURL); err != nil {
+		return e.ErrDB
+	}
+
+	return nil
+}
+
+func (s *UserService) GetMFAqrService(req *user.GetMFAqrReq, userID string) (error, *user.GetMFAqrResp) {
+	if userID == "" {
+		return e.ErrUserIDNotFound, nil
+	}
+	username, err := dao.FindUsernameByID(s.ctx, userID)
+	if err != nil {
+		return e.ErrDB, nil
+	}
+
+	QRCode, err := utils.GenerateMFA(userID, username)
+	if err != nil {
+		return e.ErrMFAGenerateFailed, nil
+	}
+
+	return nil, &user.GetMFAqrResp{
+		Base: &user.Base{
+			Code: consts.StatusOK, Msg: "Get MFAqr successfully"},
+		Qrcode: QRCode,
+	}
+}
+
+func (s *UserService) BindMFAService(req *user.BindMFAReq, userID string) error {
+	if userID == "" {
+		return e.ErrUserIDNotFound
+	}
+	secret, err := dao.GetMFATemp(s.ctx, userID)
+	if err != nil {
+		return e.ErrMFAExpired
+	}
+
+	if !utils.ValidateMFA(req.Code, secret) {
+		return e.ErrMFAInvalid
+	}
+
+	if err := dao.StoreMFASecret(s.ctx, userID, secret); err != nil {
+		return e.ErrDB
+	}
+
+	if err := dao.DeleteMFATemp(s.ctx, userID); err != nil {
+		return e.ErrDB
+	}
+
+	if err := dao.EnableMFA(s.ctx, userID); err != nil {
 		return e.ErrDB
 	}
 

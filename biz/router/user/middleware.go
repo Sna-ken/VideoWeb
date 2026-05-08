@@ -43,3 +43,19 @@ func _avatarMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _mfaMw() []app.HandlerFunc {
+	return []app.HandlerFunc{
+		middleware.JWTAuth(),
+	}
+}
+
+func _bindmfaMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getmfaqrMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

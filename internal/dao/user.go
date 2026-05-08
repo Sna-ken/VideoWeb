@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Sna-ken/videoweb/config"
@@ -30,4 +31,25 @@ func UpdateUserAvatar(ctx context.Context, userID string, avatarURL string) erro
 		"avatar_url": avatarURL,
 		"update_at":  time.Now(),
 	}).Error
+}
+
+func StoreMFASecret(ctx context.Context, userID string, secret string) error {
+	return config.MYSQLDB.WithContext(ctx).Model(&model.User{}).Where("id = ?", userID).Update("mfa_secret", secret).Error
+}
+
+func StoreMFATemp(ctx context.Context, userID string, secret string) error {
+	return config.REDISDB.Set(ctx, fmt.Sprintf("mfa:%s", userID), secret, time.Minute*5).Err()
+}
+
+func GetMFATemp(ctx context.Context, userID string) (string, error) {
+	secret, err := config.REDISDB.Get(ctx, fmt.Sprintf("mfa:%s", userID)).Result()
+	return secret, err
+}
+
+func DeleteMFATemp(ctx context.Context, userID string) error {
+	return config.REDISDB.Del(ctx, fmt.Sprintf("mfa:%s", userID)).Err()
+}
+
+func EnableMFA(ctx context.Context, userID string) error {
+	return config.MYSQLDB.WithContext(ctx).Model(&model.User{}).Where("id = ?", userID).Update("mfa_enabled", true).Error
 }
