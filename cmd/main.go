@@ -4,6 +4,8 @@ package main
 
 import (
 	"github.com/Sna-ken/videoweb/biz/router"
+
+	"github.com/Sna-ken/videoweb/biz/router/chat"
 	"github.com/Sna-ken/videoweb/biz/router/static"
 	"github.com/Sna-ken/videoweb/config"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -30,6 +32,7 @@ func main() {
 
 	router.GeneratedRegister(h)
 	static.GeneratedRegisterStaticFS(h)
+	chat.GeneratedRegister(h)
 
 	h.Spin()
 }

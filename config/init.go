@@ -48,4 +48,5 @@ func InitTable() {
 	MYSQLDB.AutoMigrate(&model.Like{})
 	MYSQLDB.AutoMigrate(&model.Comment{})
 	MYSQLDB.AutoMigrate(&model.SocialObject{})
+	MYSQLDB.AutoMigrate(&model.Message{})
 }

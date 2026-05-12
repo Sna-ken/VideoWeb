@@ -36,9 +36,15 @@ type JWTConfig struct {
 	RefreshTokenExpiry int64  `mapstructure:"refresh_token_expiry"`
 }
 
+type WSConfig struct {
+	ChatRedisKey string `mapstructure:"chat_redis_key"`
+	MaxMessage   int64  `mapstructure:"max_messages"`
+}
+
 var Mysql *MysqlConfig
 var Redis *RedisConfig
 var JWT *JWTConfig
+var WS *WSConfig
 
 func Init() {
 	_, filename, _, _ := runtime.Caller(0)
@@ -73,6 +79,9 @@ func Init() {
 	}
 	if err := viper.Sub("jwt").Unmarshal(&JWT); err != nil {
 		log.Fatalf("unmarshal jwt config fail: %v", err)
+	}
+	if err := viper.Sub("ws").Unmarshal(&WS); err != nil {
+		log.Fatalf("unmarshal redis config fail: %v", err)
 	}
 
 }

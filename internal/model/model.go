@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	ID         string     `json:"id" gorm:"primaryKey"`
@@ -70,4 +72,12 @@ type Timestamp struct {
 type Response struct {
 	Code    int32  `json:"code"`
 	Message string `json:"message"`
+}
+
+type Message struct {
+	ID        string    `json:"id" gorm:"primaryKey;comment:message_id"`
+	UserID    string    `json:"user_id" gorm:"not null;comment:user_id"`
+	Username  string    `json:"username" gorm:"not null"`
+	Content   string    `json:"content" gorm:"not null"`
+	Create_at time.Time `json:"create_at"`
 }

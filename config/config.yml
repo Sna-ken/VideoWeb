@@ -16,3 +16,7 @@ jwt:
   refresh_token_secret: your-refresh-token-secret-key
   access_token_expiry: 180   # 3分钟
   refresh_token_expiry: 604800 # 7天
+
+ws:
+  chat_redis_key: recent_message
+  max_messages: 50
