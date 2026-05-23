@@ -38,6 +38,6 @@ func (c *Client) ReadMessage() {
 			break
 		}
 
-		ManagerInstance.BoadcastMessage(msg, c)
+		ManagerInstance.BroadcastMessage(msg, c)
 	}
 }

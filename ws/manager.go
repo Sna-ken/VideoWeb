@@ -7,11 +7,13 @@ import (
 	"sync"
 
 	"github.com/Sna-ken/videoweb/biz/service/chat"
+	"github.com/Sna-ken/videoweb/internal/model"
 )
 
 type Manager struct {
-	Clients map[string]*Client
-	Lock    sync.RWMutex
+	Clients      map[string]*Client
+	Lock         sync.RWMutex
+	OnNewMessage func(msg *model.Message)
 }
 
 var ManagerInstance = &Manager{
@@ -32,7 +34,7 @@ func (m *Manager) RemoveClient(userID string) {
 	delete(m.Clients, userID)
 }
 
-func (m *Manager) BoadcastMessage(message []byte, sender *Client) {
+func (m *Manager) BroadcastMessage(message []byte, sender *Client) {
 	ctx := context.Background()
 
 	msg, err := chat.SaveMessage(ctx, sender.UserID, sender.Username, string(message))
@@ -56,5 +58,11 @@ func (m *Manager) BoadcastMessage(message []byte, sender *Client) {
 
 	for _, client := range m.Clients {
 		client.Send <- data
+	}
+
+	if m.OnNewMessage != nil {
+		go m.OnNewMessage(msg)
+	} else {
+		log.Printf("OnNewMessage is nil")
 	}
 }
