@@ -3,7 +3,12 @@
 package main
 
 import (
+	"context"
+
+	"github.com/Sna-ken/videoweb/ai/agent"
 	"github.com/Sna-ken/videoweb/biz/router"
+	"github.com/Sna-ken/videoweb/internal/model"
+	"github.com/Sna-ken/videoweb/ws"
 
 	"github.com/Sna-ken/videoweb/biz/router/chat"
 	"github.com/Sna-ken/videoweb/biz/router/static"
@@ -15,6 +20,7 @@ func main() {
 	config.Init()
 	config.InitMysql()
 	config.InitRedis()
+	config.InitAIConfig()
 
 	if config.MYSQLDB == nil {
 		panic("Mysql connection failed")
@@ -33,6 +39,15 @@ func main() {
 	router.GeneratedRegister(h)
 	static.GeneratedRegisterStaticFS(h)
 	chat.GeneratedRegister(h)
+
+	ctx := context.Background()
+
+	agent.InitAgent(ctx)
+
+	ws.ManagerInstance.OnNewMessage = func(msg *model.Message) {
+		agent.OneNewMessage(context.Background(), msg,
+			agent.MentionTrigger, agent.EmotionTrigger, agent.SilenceTrigger, agent.DecisionChain, agent.GenerationChain)
+	}
 
 	h.Spin()
 }

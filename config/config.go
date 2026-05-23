@@ -2,8 +2,6 @@ package config
 
 import (
 	"log"
-	"path/filepath"
-	"runtime"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/redis/go-redis/v9"
@@ -41,18 +39,13 @@ type WSConfig struct {
 	MaxMessage   int64  `mapstructure:"max_messages"`
 }
 
-var Mysql *MysqlConfig
-var Redis *RedisConfig
-var JWT *JWTConfig
-var WS *WSConfig
+var Mysql = &MysqlConfig{}
+var Redis = &RedisConfig{}
+var JWT = &JWTConfig{}
+var WS = &WSConfig{}
 
 func Init() {
-	_, filename, _, _ := runtime.Caller(0)
-	dir := filepath.Dir(filename)
-
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(dir)
+	viper.SetConfigFile("./config/config.yml")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("read config fail: %v", err)
@@ -71,17 +64,17 @@ func Init() {
 		log.Printf("config reloaded successfully")
 	})
 
-	if err := viper.Sub("mysql").Unmarshal(&Mysql); err != nil {
+	if err := viper.Sub("mysql").Unmarshal(Mysql); err != nil {
 		log.Fatalf("unmarshal mysql config fail: %v", err)
 	}
-	if err := viper.Sub("redis").Unmarshal(&Redis); err != nil {
+	if err := viper.Sub("redis").Unmarshal(Redis); err != nil {
 		log.Fatalf("unmarshal redis config fail: %v", err)
 	}
-	if err := viper.Sub("jwt").Unmarshal(&JWT); err != nil {
+	if err := viper.Sub("jwt").Unmarshal(JWT); err != nil {
 		log.Fatalf("unmarshal jwt config fail: %v", err)
 	}
-	if err := viper.Sub("ws").Unmarshal(&WS); err != nil {
-		log.Fatalf("unmarshal redis config fail: %v", err)
+	if err := viper.Sub("ws").Unmarshal(WS); err != nil {
+		log.Fatalf("unmarshal ws config fail: %v", err)
 	}
 
 }

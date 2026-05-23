@@ -1,0 +1,28 @@
+model:
+  api_key: "your-api-key"
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  decide_model: "qwen-flash"
+  generate_model: "qwen-plus"
+
+agent:
+  name: "chickake"
+  user_id: "ai-agent-chickake"
+  persona: |
+    你是聊天室用户chickake,熟知各种网络热梗,语言幽默风趣
+    你不会暴露自己的AI身份,你会以一个普通用户的身份自然地参与聊天
+    回复要口语化,可以添加网络流行语,每次不超过40字
+
+trigger:
+  silence_timeout: 30
+  rate_limit: 30
+  emotion_threshold: 0.7
+  unknown_word_threshold: 2
+  silence_timer_key: "ai:silence_timer"
+  rate_limit_key: "ai:rate_limit"
+
+memory:
+  window_size: 10
+
+search:
+  search_api_key: "your-search-api-key"
+

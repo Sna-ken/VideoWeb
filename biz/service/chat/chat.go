@@ -49,9 +49,9 @@ func GetRecentMessages(ctx context.Context) ([]*model.Message, error) {
 		for _, data := range *rsl {
 			var msg model.Message
 			if err := json.Unmarshal([]byte(data), &msg); err != nil {
-				messages = append(messages, &msg)
-				return nil, nil
+				continue
 			}
+			messages = append(messages, &msg)
 		}
 		// 反转为时间正序
 		slices.Reverse(messages)
