@@ -50,11 +50,7 @@ func (m *Manager) BroadcastMessage(message []byte, sender *Client) {
 	}
 
 	m.Lock.RLock()
-	targets := make([]*Client, 0, len(message))
-	for _, client := range m.Clients {
-		targets = append(targets, client)
-	}
-	m.Lock.RUnlock()
+	defer m.Lock.RUnlock()
 
 	for _, client := range m.Clients {
 		client.Send <- data
