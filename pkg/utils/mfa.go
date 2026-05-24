@@ -31,7 +31,9 @@ func GenerateMFA(userID string, username string) (string, error) {
 	}
 
 	base64code := base64.StdEncoding.EncodeToString(qrcode)
-	err = dao.StoreMFATemp(context.Background(), userID, key.Secret())
+	if err := dao.StoreMFATemp(context.Background(), userID, key.Secret()); err != nil {
+		return "", err
+	}
 
 	return fmt.Sprintf("data:image/png;base64,%s", base64code), nil
 }

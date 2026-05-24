@@ -43,10 +43,22 @@ func InitRedis() {
 }
 
 func InitTable() {
-	MYSQLDB.AutoMigrate(&model.User{})
-	MYSQLDB.AutoMigrate(&model.Video{})
-	MYSQLDB.AutoMigrate(&model.Like{})
-	MYSQLDB.AutoMigrate(&model.Comment{})
-	MYSQLDB.AutoMigrate(&model.SocialObject{})
-	MYSQLDB.AutoMigrate(&model.Message{})
+	if err := MYSQLDB.AutoMigrate(&model.User{}); err != nil {
+		panic("failed to migrate User table" + err.Error())
+	}
+	if err := MYSQLDB.AutoMigrate(&model.Video{}); err != nil {
+		panic("failed to migrate Video table" + err.Error())
+	}
+	if err := MYSQLDB.AutoMigrate(&model.Like{}); err != nil {
+		panic("failed to migrate Like table" + err.Error())
+	}
+	if err := MYSQLDB.AutoMigrate(&model.Comment{}); err != nil {
+		panic("failed to migrate Comment table" + err.Error())
+	}
+	if err := MYSQLDB.AutoMigrate(&model.SocialObject{}); err != nil {
+		panic("failed to migrate SocialObject table" + err.Error())
+	}
+	if err := MYSQLDB.AutoMigrate(&model.Message{}); err != nil {
+		panic("failed to migrate Message table" + err.Error())
+	}
 }
