@@ -1,0 +1,13 @@
+.git/
+.gitignore
+README.md
+.gitignore
+.editorconfig
+.gitattributes
+.vscode/
+.idea/
+.github/
+.gitlab-ci.yml
+.travis.yml
+.env
+.env.local

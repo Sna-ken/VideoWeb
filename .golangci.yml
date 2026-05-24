@@ -1,0 +1,31 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:                          
+    - errcheck                     # 强制处理所有 error 返回值
+    - gosimple                     # 简化代码
+    - govet                        # 检查可疑构造
+    - ineffassign                  # 检测无效赋值
+    - staticcheck                  # 高级静态分析
+    - typecheck                    # 类型检查
+    - unused                       # 检测未使用的代码
+    
+    - gofmt                        # 检查代码格式
+    - goimports                    # 检查 import 排序
+    - misspell                     # 检查拼写错误
+    - whitespace                   # 检查多余空白行
+    - godot                        # 检查注释是否以句号结尾
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15             # 圈复杂度超过 15 警告
+  misspell:
+    locale: US                     # 使用美国英语词典
+
+issuer:
+  exclude-rules:
+    - path: _test\.go                
+      linters:
+        - gocyclo                   
