@@ -4,7 +4,7 @@
 - **核心语言：** Go
 - **接口定义：** Thrift
 - **web框架：** Hertz
-- **agent框架:**Eino
+- **agent框架:** Eino
 - **数据库：** MySQL
 - **缓存：** Redis
 # 项目结构
