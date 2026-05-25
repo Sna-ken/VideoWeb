@@ -31,12 +31,12 @@ func (s *UserService) RegisterService(req *user.RegisterReq) error {
 	var tempUser model.User
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
-		return e.ErrHasedPassword
+		return e.New(consts.StatusInternalServerError, "Hash password failed", err)
 	}
 	req.Password = hashedPassword
 
 	if err := dao.FindUserByName(s.ctx, &tempUser, req.Username); err == nil {
-		return e.ErrUserHasExisted
+		return e.New(consts.StatusConflict, "User has existed", err)
 	} //先通过校检再初始化，FindUser和CreateUser不要重复使用同样的变量
 
 	_user := model.User{
@@ -49,7 +49,7 @@ func (s *UserService) RegisterService(req *user.RegisterReq) error {
 	}
 
 	if err := dao.CreateUser(s.ctx, &_user); err != nil {
-		return e.ErrDB
+		return e.New(consts.StatusInternalServerError, "Create user failed", err)
 	}
 
 	return nil
@@ -59,35 +59,35 @@ func (s *UserService) LoginService(req *user.LoginReq) (error, *user.LoginResp) 
 	var _user model.User
 
 	if err := dao.FindUserByName(s.ctx, &_user, req.Username); err == gorm.ErrRecordNotFound {
-		return e.ErrUserNotFound, nil
+		return e.New(consts.StatusNotFound, "User not found", err), nil
 	}
 
 	if !utils.CheckPasswordHash(req.Password, _user.Password) {
-		return e.ErrWrongPassword, nil
+		return e.New(consts.StatusUnauthorized, "Wrong password", nil), nil
 	}
 
 	if req.MfaEnabled {
 		if !_user.MFAEnabled {
-			return e.ErrMFARequired, nil
+			return e.New(consts.StatusUnauthorized, "MFA required", nil), nil
 		}
 
 		if !utils.ValidateMFA(req.Code, _user.MFASecret) {
-			return e.ErrMFAInvalid, nil
+			return e.New(consts.StatusUnauthorized, "Invalid MFA code", nil), nil
 		}
 	}
 
 	accesstoken, err := jwt.GenerateAccessToken(_user.ID)
 	if err != nil {
-		return e.ErrGenerateToken, nil
+		return e.New(consts.StatusInternalServerError, "Generate access token failed", err), nil
 	}
 
 	refreshtoken, err := jwt.GenerateRefreshToken(_user.ID)
 	if err != nil {
-		return e.ErrGenerateToken, nil
+		return e.New(consts.StatusInternalServerError, "Generate refresh token failed", err), nil
 	}
 
 	if err := dao.SetRefreshToken(s.ctx, _user.ID, refreshtoken); err != nil {
-		return e.ErrDB, nil
+		return e.New(consts.StatusInternalServerError, "Set refresh token failed", err), nil
 	}
 
 	deletedAtStr := ""
@@ -112,15 +112,15 @@ func (s *UserService) LoginService(req *user.LoginReq) (error, *user.LoginResp) 
 
 func (s *UserService) UserInfoService(req *user.UserInfoReq, userID string) (error, *user.UserInfoResp) {
 	if userID == "" {
-		return e.ErrUserIDNotFound, nil
+		return e.New(consts.StatusNotFound, "User ID not found", nil), nil
 	}
 
 	var _user model.User
 	if err := dao.FindUserByID(s.ctx, &_user, userID); err != nil {
 		if err.Error() == "record not found" {
-			return e.ErrUserNotFound, nil
+			return e.New(consts.StatusNotFound, "User not found", nil), nil
 		}
-		return e.ErrDB, nil
+		return e.New(consts.StatusInternalServerError, "Database error", err), nil
 	}
 
 	deletedAtStr := ""
@@ -147,37 +147,37 @@ func (s *UserService) UserInfoService(req *user.UserInfoReq, userID string) (err
 func (s *UserService) UploadAvatarService(req *user.UploadAvatarReq, userID string, file *multipart.FileHeader) error {
 	fileContent, err := file.Open()
 	if err != nil {
-		return e.ErrFileOpenFailed
+		return e.New(consts.StatusInternalServerError, "Open file failed", err)
 	}
 
 	defer fileContent.Close()
 	if userID == "" {
-		return e.ErrUserIDNotFound
+		return e.New(consts.StatusNotFound, "User ID not found", nil)
 	}
 
 	avatarBytes, err := io.ReadAll(fileContent)
 	if err != nil {
-		return e.ErrFileOpenFailed
+		return e.New(consts.StatusInternalServerError, "Read file failed", err)
 	}
 
 	if len(avatarBytes) == 0 {
-		return e.ErrFileRequired
+		return e.New(consts.StatusBadRequest, "File is empty", nil)
 	}
 	var _user model.User
 	if err := dao.FindUserByID(s.ctx, &_user, userID); err != nil {
 		if err.Error() == "record not found" {
-			return e.ErrUserNotFound
+			return e.New(consts.StatusNotFound, "User not found", nil)
 		}
-		return e.ErrDB
+		return e.New(consts.StatusInternalServerError, "Database error", err)
 	}
 
 	avatarURL, err := utils.StoreAvatar(avatarBytes, userID)
 	if err != nil {
-		return e.ErrFileSaveFailed
+		return e.New(consts.StatusInternalServerError, "Save file failed", err)
 	}
 
 	if err := dao.UpdateUserAvatar(s.ctx, userID, avatarURL); err != nil {
-		return e.ErrDB
+		return e.New(consts.StatusInternalServerError, "Update user avatar failed", err)
 	}
 
 	return nil
@@ -185,16 +185,16 @@ func (s *UserService) UploadAvatarService(req *user.UploadAvatarReq, userID stri
 
 func (s *UserService) GetMFAqrService(req *user.GetMFAqrReq, userID string) (error, *user.GetMFAqrResp) {
 	if userID == "" {
-		return e.ErrUserIDNotFound, nil
+		return e.New(consts.StatusNotFound, "User ID not found", nil), nil
 	}
 	username, err := dao.FindUsernameByID(s.ctx, userID)
 	if err != nil {
-		return e.ErrDB, nil
+		return e.New(consts.StatusInternalServerError, "Database error", err), nil
 	}
 
 	QRCode, err := utils.GenerateMFA(userID, username)
 	if err != nil {
-		return e.ErrMFAGenerateFailed, nil
+		return e.New(consts.StatusInternalServerError, "Generate MFA QR code failed", err), nil
 	}
 
 	return nil, &user.GetMFAqrResp{
@@ -206,27 +206,27 @@ func (s *UserService) GetMFAqrService(req *user.GetMFAqrReq, userID string) (err
 
 func (s *UserService) BindMFAService(req *user.BindMFAReq, userID string) error {
 	if userID == "" {
-		return e.ErrUserIDNotFound
+		return e.New(consts.StatusNotFound, "User ID not found", nil)
 	}
 	secret, err := dao.GetMFATemp(s.ctx, userID)
 	if err != nil {
-		return e.ErrMFAExpired
+		return e.New(consts.StatusNotFound, "MFA temporary secret not found", nil)
 	}
 
 	if !utils.ValidateMFA(req.Code, secret) {
-		return e.ErrMFAInvalid
+		return e.New(consts.StatusUnauthorized, "Invalid MFA code", nil)
 	}
 
 	if err := dao.StoreMFASecret(s.ctx, userID, secret); err != nil {
-		return e.ErrDB
+		return e.New(consts.StatusInternalServerError, "Store MFA secret failed", err)
 	}
 
 	if err := dao.DeleteMFATemp(s.ctx, userID); err != nil {
-		return e.ErrDB
+		return e.New(consts.StatusInternalServerError, "Delete MFA temporary secret failed", err)
 	}
 
 	if err := dao.EnableMFA(s.ctx, userID); err != nil {
-		return e.ErrDB
+		return e.New(consts.StatusInternalServerError, "Enable MFA failed", err)
 	}
 
 	return nil

@@ -29,32 +29,17 @@ func LikeAction(ctx context.Context, c *app.RequestContext) {
 
 	err = interactService.LikeActionService(&req, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrUserNotFound):
-			c.JSON(consts.StatusUnauthorized, &interact.LikeActionResp{
-				Base: &interact.Base{Code: consts.StatusUnauthorized, Msg: "Liked failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &interact.LikeActionResp{
-				Base: &interact.Base{Code: consts.StatusInternalServerError, Msg: "Liked failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrOperationRepeated):
-			c.JSON(consts.StatusBadRequest, &interact.LikeActionResp{
-				Base: &interact.Base{Code: consts.StatusBadRequest, Msg: "Liked failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrLikeNotexisted):
-			c.JSON(consts.StatusBadRequest, &interact.LikeActionResp{
-				Base: &interact.Base{Code: consts.StatusBadRequest, Msg: "Liked failed:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &interact.LikeActionResp{
+				Base: &interact.Base{Code: int32(e.Code), Msg: "Like action failed:" + e.Msg},
 			})
 			return
 		}
 	}
 
 	c.JSON(consts.StatusOK, interact.LikeActionResp{
-		Base: &interact.Base{Code: consts.StatusOK, Msg: "Like act successfully"},
+		Base: &interact.Base{Code: consts.StatusOK, Msg: "Like action successfully"},
 	})
 }
 
@@ -75,15 +60,10 @@ func LikeList(ctx context.Context, c *app.RequestContext) {
 
 	err, resp = interactService.LikeListService(&req)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrIDAndNameInconsistent):
-			c.JSON(consts.StatusBadRequest, &interact.LikeListResp{
-				Base: &interact.Base{Code: consts.StatusBadRequest, Msg: "Failed to fetch liked videos:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &interact.LikeListResp{
-				Base: &interact.Base{Code: consts.StatusInternalServerError, Msg: "Failed to fetch liked videos:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &interact.LikeListResp{
+				Base: &interact.Base{Code: int32(e.Code), Msg: "Failed to fetch liked videos:" + e.Msg},
 			})
 			return
 		}
@@ -109,20 +89,10 @@ func CommentPublish(ctx context.Context, c *app.RequestContext) {
 
 	err = interactService.CommentPublishService(&req, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &interact.CommentPublishResp{
-				Base: &interact.Base{Code: consts.StatusInternalServerError, Msg: "Comment pubish failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrUserIDNotFound):
-			c.JSON(consts.StatusUnauthorized, &interact.CommentPublishResp{
-				Base: &interact.Base{Code: consts.StatusUnauthorized, Msg: "Comment pubish failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrUserNotFound):
-			c.JSON(consts.StatusUnauthorized, &interact.CommentPublishResp{
-				Base: &interact.Base{Code: consts.StatusUnauthorized, Msg: "Comment pubish failed:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &interact.CommentPublishResp{
+				Base: &interact.Base{Code: int32(e.Code), Msg: "Comment publish failed:" + e.Msg},
 			})
 			return
 		}
@@ -148,10 +118,10 @@ func CommentList(ctx context.Context, c *app.RequestContext) {
 	interactService := service.NewInteractService(ctx)
 	err, resp = interactService.CommentListService(&req)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &interact.CommentListResp{
-				Base: &interact.Base{Code: consts.StatusInternalServerError, Msg: "Comment list fetch failed:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &interact.CommentListResp{
+				Base: &interact.Base{Code: int32(e.Code), Msg: "Comment list fetch failed:" + e.Msg},
 			})
 			return
 		}
@@ -175,19 +145,10 @@ func CommentDelete(ctx context.Context, c *app.RequestContext) {
 
 	err = interactService.CommentDeleteService(&req, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &interact.CommentDeleteResp{
-				Base: &interact.Base{Code: consts.StatusInternalServerError, Msg: "Comment delete failed:" + err.Error()},
-			})
-		case errors.Is(err, e.ErrUserNotFound):
-			c.JSON(consts.StatusServiceUnavailable, &interact.CommentDeleteResp{
-				Base: &interact.Base{Code: consts.StatusServiceUnavailable, Msg: "Comment delete failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrNoPermissionOrNotFound):
-			c.JSON(consts.StatusNotFound, &interact.CommentDeleteResp{
-				Base: &interact.Base{Code: consts.StatusNotFound, Msg: "Comment delete failed:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &interact.CommentDeleteResp{
+				Base: &interact.Base{Code: int32(e.Code), Msg: "Comment delete failed:" + e.Msg},
 			})
 			return
 		}

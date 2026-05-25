@@ -29,37 +29,17 @@ func FollowAction(ctx context.Context, c *app.RequestContext) {
 
 	err = socialService.FollowActionService(&req, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &social.FollowActionResp{
-				Base: &social.Base{Code: consts.StatusInternalServerError, Msg: "follow failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrUserNotFound):
-			c.JSON(consts.StatusUnauthorized, &social.FollowActionResp{
-				Base: &social.Base{Code: consts.StatusUnauthorized, Msg: "follow failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrIDAndNameInconsistent):
-			c.JSON(consts.StatusBadRequest, &social.FollowActionResp{
-				Base: &social.Base{Code: consts.StatusBadRequest, Msg: "follow failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrOperationRepeated):
-			c.JSON(consts.StatusBadRequest, &social.FollowActionResp{
-				Base: &social.Base{Code: consts.StatusBadRequest, Msg: "follow failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrCanNotSelfFollow):
-			c.JSON(consts.StatusBadRequest, &social.FollowActionResp{
-				Base: &social.Base{Code: consts.StatusBadRequest, Msg: "follow failed:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &social.FollowActionResp{
+				Base: &social.Base{Code: int32(e.Code), Msg: "follow failed:" + e.Msg},
 			})
 			return
 		}
 	}
 
 	c.JSON(consts.StatusOK, social.FollowActionResp{
-		Base: &social.Base{Code: consts.StatusOK, Msg: "follow seccussfully"},
+		Base: &social.Base{Code: consts.StatusOK, Msg: "follow successfully"},
 	})
 }
 
@@ -80,10 +60,10 @@ func FollowList(ctx context.Context, c *app.RequestContext) {
 
 	err, resp = socialService.FollowListService(&req, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &social.FollowListResp{
-				Base: &social.Base{Code: consts.StatusInternalServerError, Msg: "follow list fetched failed:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &social.FollowListResp{
+				Base: &social.Base{Code: int32(e.Code), Msg: "follow list fetched failed:" + e.Msg},
 			})
 			return
 		}
@@ -108,10 +88,10 @@ func FollowerList(ctx context.Context, c *app.RequestContext) {
 
 	err, resp = socialService.FollowerListService(&req, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &social.FollowerListResp{
-				Base: &social.Base{Code: consts.StatusInternalServerError, Msg: "follower list fetched failed:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &social.FollowerListResp{
+				Base: &social.Base{Code: int32(e.Code), Msg: "follower list fetched failed:" + e.Msg},
 			})
 			return
 		}
@@ -136,10 +116,10 @@ func FriendList(ctx context.Context, c *app.RequestContext) {
 
 	err, resp = socialService.FriendListService(&req, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &social.FriendListResp{
-				Base: &social.Base{Code: consts.StatusInternalServerError, Msg: "follower list fetched failed:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &social.FriendListResp{
+				Base: &social.Base{Code: int32(e.Code), Msg: "friend list fetched failed:" + e.Msg},
 			})
 			return
 		}

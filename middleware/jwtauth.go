@@ -30,7 +30,7 @@ func JWTAuth() app.HandlerFunc {
 		if refresh == "" {
 			c.JSON(consts.StatusUnauthorized, &user.Base{
 				Code: consts.StatusUnauthorized,
-				Msg:  "missing refresh token",
+				Msg:  "missing refresh token:",
 			})
 			c.Abort()
 			return
@@ -40,17 +40,26 @@ func JWTAuth() app.HandlerFunc {
 		if err != nil {
 			c.JSON(consts.StatusUnauthorized, &user.Base{
 				Code: consts.StatusUnauthorized,
-				Msg:  "refresh token invalid",
+				Msg:  "refresh token invalid:" + err.Error(),
 			})
 			c.Abort()
 			return
 		}
 
 		val, err := config.REDISDB.Get(ctx, "user_rftoken:"+rfClaims.UserID).Result()
-		if err != nil || val != refresh {
+		if err != nil {
 			c.JSON(consts.StatusUnauthorized, &user.Base{
 				Code: consts.StatusUnauthorized,
-				Msg:  "session invalid",
+				Msg:  "session invalid:" + err.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		if val != refresh {
+			c.JSON(consts.StatusUnauthorized, &user.Base{
+				Code: consts.StatusUnauthorized,
+				Msg:  "session invalid: refresh token mismatch",
 			})
 			c.Abort()
 			return
@@ -60,7 +69,7 @@ func JWTAuth() app.HandlerFunc {
 		if err != nil {
 			c.JSON(consts.StatusInternalServerError, &user.Base{
 				Code: consts.StatusInternalServerError,
-				Msg:  "failed to generate access token",
+				Msg:  "failed to generate access token:" + err.Error(),
 			})
 			c.Abort()
 			return
