@@ -4,44 +4,160 @@
 - **核心语言：** Go
 - **接口定义：** Thrift
 - **web框架：** Hertz
+- **agent框架:**Eino
 - **数据库：** MySQL
 - **缓存：** Redis
 # 项目结构
 ```txt
 VideoWeb/
-├── biz/                // 核心业务层：处理、服务、路由、模型定义
-│   ├── handler/        // 请求处理：按业务模块拆分（user/video/social/interact）
-│   │   ├── interact/   
-│   │   ├── social/     
-│   │   ├── user/       
-│   │   └── video/      
-│   ├── model/          // 业务模型：各模块数据结构定义
-│   ├── router/         // 路由注册：按模块配置路由与中间件
-│   │   ├── interact/   
-│   │   ├── social/     
-│   │   ├── user/       
-│   │   └── video/      
-│   └── service/        // 业务服务：核心逻辑实现
-│       ├── interact/   
-│       ├── social/     
-│       ├── user/       
-│       └── video/      
-├── cmd/                // 程序入口
-├── config/             // 配置管理（config.go/config.yml）
-├── idl/                // 接口定义
-├── internal/dao/       // 数据访问层：对数据库进行操作
-├── middleware/         // 中间件：JWT 认证
-├── pkg/                // 公共工具
-│   ├── e/              // 错误码定义
-│   ├── jwt/            // JWT 工具包
-│   └── utils/          // 工具类
-├── static/             // 静态资源：视频、头像等文件存储
-│   ├── avatar/         // 头像存储目录
-│   └── video/          // 视频存储目录
-├── docker-compose.yml  // 容器化部署配置
-├── dockerfile          // Docker 构建配置
-├── go.mod/go.sum       // Go 依赖管理
-└── README.md           // 项目文档（含 API 文档地址）
+│   docker-compose.yml
+│   dockerfile
+│   go.mod
+│   go.sum
+│   README.md
+│   router.go
+│   router_gen.go
+│
+├───ai
+│   ├───agent
+│   │       agent.go
+│   │       sender.go
+│   └───internal
+│       ├───chain
+│       │       decide_chain.go
+│       │       generate_chain.go
+│       │
+│       ├───memory
+│       │       memory.go
+│       │
+│       ├───provider
+│       │       model.go
+│       │
+│       └───trigger
+│               emotion.go
+│               mention.go
+│               silence.go
+│               trigger.go
+├───biz
+│   ├───handler
+│   │   │   ping.go
+│   │   │
+│   │   ├───chat
+│   │   │       chat_service.go
+│   │   │
+│   │   ├───interact
+│   │   │       interact_service.go
+│   │   │
+│   │   ├───social
+│   │   │       social_service.go
+│   │   │
+│   │   ├───user
+│   │   │       user_service.go
+│   │   │
+│   │   └───video
+│   │           video_service.go
+│   ├───model
+│   │   ├───interact
+│   │   │       interact.go
+│   │   │
+│   │   ├───social
+│   │   │       social.go
+│   │   │
+│   │   ├───user
+│   │   │       user.go
+│   │   │
+│   │   └───video
+│   │           video.go
+│   ├───router
+│   │   │   register.go
+│   │   │
+│   │   ├───chat
+│   │   │       chat.go
+│   │   │
+│   │   ├───interact
+│   │   │       interact.go
+│   │   │       middleware.go
+│   │   │
+│   │   ├───social
+│   │   │       middleware.go
+│   │   │       social.go
+│   │   │
+│   │   ├───static
+│   │   │       static.go
+│   │   │
+│   │   ├───user
+│   │   │       middleware.go
+│   │   │       user.go
+│   │   │
+│   │   └───video
+│   │           middleware.go
+│   │           video.go
+│   └───service
+│       ├───chat
+│       │       chat.go
+│       │
+│       ├───interact
+│       │       interact.go
+│       │
+│       ├───social
+│       │       social.go
+│       │
+│       ├───user
+│       │       user.go
+│       │
+│       └───video
+│               video.go
+├───cmd
+│       main.go
+│
+├───config
+│       ai_config.go
+│       ai_config.yml
+│       config.go
+│       config.yml
+│       init.go
+│
+├───idl
+│       interact.thrift
+│       social.thrift
+│       user.thrift
+│       video.thrift
+│
+├───internal
+│   ├───dao
+│   │       chat.go
+│   │       interact.go
+│   │       social.go
+│   │       user.go
+│   │       video.go
+│   │
+│   └───model
+│           model.go
+│
+├───middleware
+│       jwtauth.go
+│
+├───pkg
+│   ├───e
+│   │       e.go
+│   │
+│   ├───jwt
+│   │       jwt.go
+│   │
+│   └───utils
+│           hashpassword.go
+│           mfa.go
+│           search.go
+│           store.go
+├───static
+│   ├───avatar
+│   │
+│   └───video
+│
+└───ws
+        client.go
+        manager.go
 ```
 # 文档地址
 **apifox接口文档：** https://7dveb16f8y.apifox.cn/418681111e0
+**飞书文档地址**https://ocnz01b9ahxp.feishu.cn/wiki/UHNVwV5fJiVTRLkxSwAcMRTenbb?from=from_copylink
