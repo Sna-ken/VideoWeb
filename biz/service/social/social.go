@@ -21,7 +21,7 @@ func NewSocialService(ctx context.Context) *SocialService {
 
 func (s *SocialService) FollowActionService(req *social.FollowActionReq, userID string) error {
 	if userID == "" {
-		return e.ErrUserNotFound
+		return e.New(consts.StatusUnauthorized, "User ID not found", nil)
 	}
 
 	var toUserID string
@@ -31,10 +31,10 @@ func (s *SocialService) FollowActionService(req *social.FollowActionReq, userID 
 	if req.ToUserid != "" && req.ToUsername != "" {
 		_toUserID, err := dao.FindUserIDByName(s.ctx, req.ToUsername)
 		if err != nil {
-			return e.ErrDB
+			return e.New(consts.StatusInternalServerError, "Database error", err)
 		}
 		if _toUserID != req.ToUserid {
-			return e.ErrIDAndNameInconsistent
+			return e.New(consts.StatusBadRequest, "User ID and username are inconsistent", nil)
 		}
 		toUserID = req.ToUserid
 		toUserName = req.ToUsername
@@ -42,27 +42,27 @@ func (s *SocialService) FollowActionService(req *social.FollowActionReq, userID 
 		toUserID = req.ToUserid
 		toUserName, err = dao.FindUsernameByID(s.ctx, toUserID)
 		if err != nil {
-			return e.ErrDB
+			return e.New(consts.StatusInternalServerError, "Database error", err)
 		}
 	} else if req.ToUsername != "" {
 		toUserName = req.ToUsername
 		toUserID, err = dao.FindUserIDByName(s.ctx, req.ToUsername)
 		if err != nil {
-			return e.ErrDB
+			return e.New(consts.StatusInternalServerError, "Database error", err)
 		}
 	}
 
 	if err != nil || toUserID == "" {
-		return e.ErrUserNotFound
+		return e.New(consts.StatusNotFound, "User not found", nil)
 	}
 
 	if userID == toUserID {
-		return e.ErrCanNotSelfFollow
+		return e.New(consts.StatusBadRequest, "Cannot follow yourself", nil)
 	}
 
 	avatarURL, err := dao.FindAvatarByUserID(s.ctx, toUserID)
 	if err != nil {
-		return e.ErrDB
+		return e.New(consts.StatusInternalServerError, "Database error", err)
 	}
 
 	if err = dao.FindSocialObject(s.ctx, &_object, userID, toUserID); err != nil {
@@ -75,19 +75,19 @@ func (s *SocialService) FollowActionService(req *social.FollowActionReq, userID 
 				Avatar_url: avatarURL,
 			}
 			if err = dao.CreateSocialObject(s.ctx, &_object); err != nil {
-				return e.ErrDB
+				return e.New(consts.StatusInternalServerError, "Create social object failed", err)
 			}
 		}
 		if req.ActionType == "0" {
-			return e.ErrOperationRepeated
+			return e.New(consts.StatusBadRequest, "Operation repeated", nil)
 		}
 	} else {
 		if req.ActionType == "1" {
-			return e.ErrOperationRepeated
+			return e.New(consts.StatusBadRequest, "Operation repeated", nil)
 		}
 		if req.ActionType == "0" {
 			if err = dao.RemoveSocialObject(s.ctx, userID, toUserID); err != nil {
-				return e.ErrDB
+				return e.New(consts.StatusInternalServerError, "Remove social object failed", err)
 			}
 		}
 	}
@@ -101,7 +101,7 @@ func (s *SocialService) FollowListService(req *social.FollowListReq, userID stri
 	var _objectList []model.SocialObject
 
 	if err := dao.FindFollowByUserID(s.ctx, userID, offset, int(req.PageSize), &_objectList); err != nil {
-		return e.ErrDB, nil
+		return e.New(consts.StatusInternalServerError, "Database error", err), nil
 	}
 
 	items := make([]*social.Item, 0, len(_objectList))
@@ -126,7 +126,7 @@ func (s *SocialService) FollowerListService(req *social.FollowerListReq, userID 
 	var _objectList []model.SocialObject
 
 	if err := dao.FindFollowerByUserID(s.ctx, userID, offset, int(req.PageSize), &_objectList); err != nil {
-		return e.ErrDB, nil
+		return e.New(consts.StatusInternalServerError, "Database error", err), nil
 	}
 
 	items := make([]*social.Item, 0, len(_objectList))
@@ -144,12 +144,13 @@ func (s *SocialService) FollowerListService(req *social.FollowerListReq, userID 
 		Base: &social.Base{Code: consts.StatusOK, Msg: "follower list fetched successfully"},
 		Data: &social.Data{Item: items, Total: int32(len(items))}}
 }
+
 func (s *SocialService) FriendListService(req *social.FriendListReq, userID string) (error, *social.FriendListResp) {
 	offset := int((req.PageNum - 1) * req.PageSize)
 
 	var _objectList []model.SocialObject
 	if err := dao.FindFriendByUserID(s.ctx, userID, offset, int(req.PageSize), &_objectList); err != nil {
-		return e.ErrDB, nil
+		return e.New(consts.StatusInternalServerError, "Database error", err), nil
 	}
 	items := make([]*social.Item, 0, len(_objectList))
 
@@ -163,6 +164,6 @@ func (s *SocialService) FriendListService(req *social.FriendListReq, userID stri
 	}
 
 	return nil, &social.FriendListResp{
-		Base: &social.Base{Code: consts.StatusOK, Msg: "frriend list fetched successfully"},
+		Base: &social.Base{Code: consts.StatusOK, Msg: "friend list fetched successfully"},
 		Data: &social.Data{Item: items, Total: int32(len(items))}}
 }

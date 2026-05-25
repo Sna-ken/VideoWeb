@@ -44,27 +44,10 @@ func Publish(ctx context.Context, c *app.RequestContext) {
 
 	err = videoService.PublishService(&req, userID, coverfile, videofile)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrFileOpenFailed):
-			c.JSON(consts.StatusInternalServerError, &video.PublishResp{
-				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Publish failed:" + err.Error()},
-			})
-			return
-
-		case errors.Is(err, e.ErrVideoOpenFailed):
-			c.JSON(consts.StatusInternalServerError, &video.PublishResp{
-				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Publish failed:" + err.Error()},
-			})
-			return
-
-		case errors.Is(err, e.ErrFileRequired):
-			c.JSON(consts.StatusBadRequest, &video.PublishResp{
-				Base: &video.Base{Code: consts.StatusBadRequest, Msg: "Publish failed:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrUserIDNotFound):
-			c.JSON(consts.StatusUnauthorized, &video.PublishResp{
-				Base: &video.Base{Code: consts.StatusUnauthorized, Msg: "Publish failed:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &video.PublishResp{
+				Base: &video.Base{Code: int32(e.Code), Msg: "Publish failed:" + e.Msg},
 			})
 			return
 		}
@@ -88,15 +71,10 @@ func List(ctx context.Context, c *app.RequestContext) {
 
 	err, resp = videoService.ListService(&req, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &video.ListResp{
-				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Failed to fetch video list:" + err.Error()},
-			})
-			return
-		case errors.Is(err, e.ErrUserIDNotFound):
-			c.JSON(consts.StatusUnauthorized, &video.ListResp{
-				Base: &video.Base{Code: consts.StatusUnauthorized, Msg: "Failed to fetch video list:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &video.ListResp{
+				Base: &video.Base{Code: int32(e.Code), Msg: "Failed to fetch video list:" + e.Msg},
 			})
 			return
 		}
@@ -116,10 +94,10 @@ func Popular(ctx context.Context, c *app.RequestContext) {
 
 	err, resp = videoService.PopularService(&req)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &video.PopularResp{
-				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Failed to fetch popular videos:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &video.PopularResp{
+				Base: &video.Base{Code: int32(e.Code), Msg: "Failed to fetch popular videos:" + e.Msg},
 			})
 			return
 		}
@@ -139,10 +117,10 @@ func Search(ctx context.Context, c *app.RequestContext) {
 
 	err, resp = videoService.SearchService(&req)
 	if err != nil {
-		switch {
-		case errors.Is(err, e.ErrDB):
-			c.JSON(consts.StatusInternalServerError, &video.SearchResp{
-				Base: &video.Base{Code: consts.StatusInternalServerError, Msg: "Failed to search videos:" + err.Error()},
+		var e *e.Error
+		if errors.As(err, &e) {
+			c.JSON(e.Code, &video.SearchResp{
+				Base: &video.Base{Code: int32(e.Code), Msg: "Failed to search videos:" + e.Msg},
 			})
 			return
 		}

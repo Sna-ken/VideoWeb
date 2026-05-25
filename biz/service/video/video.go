@@ -26,44 +26,44 @@ func NewVideoService(ctx context.Context) *VideoService {
 
 func (s *VideoService) PublishService(req *video.PublishReq, userID string, coverfile *multipart.FileHeader, videofile *multipart.FileHeader) error {
 	if userID == "" {
-		return e.ErrUserIDNotFound
+		return e.New(consts.StatusUnauthorized, "User ID not found", nil)
 	}
 
 	username, err := dao.FindUsernameByID(s.ctx, userID)
 	if err != nil {
-		return e.ErrDB
+		return e.New(consts.StatusInternalServerError, "Database error", err)
 	}
 
 	coverContent, err := coverfile.Open()
 	if err != nil {
-		return e.ErrFileOpenFailed
+		return e.New(consts.StatusInternalServerError, "Open cover file failed", err)
 	}
 	defer coverContent.Close()
 	videoContent, err := videofile.Open()
 	if err != nil {
-		return e.ErrVideoOpenFailed
+		return e.New(consts.StatusInternalServerError, "Open video file failed", err)
 	}
 	defer videoContent.Close()
 
 	coverBytes, err := io.ReadAll(coverContent)
 	if err != nil {
-		return e.ErrFileOpenFailed
+		return e.New(consts.StatusInternalServerError, "Read cover file failed", err)
 	}
 	videoBytes, err := io.ReadAll(videoContent)
 	if err != nil {
-		return e.ErrVideoOpenFailed
+		return e.New(consts.StatusInternalServerError, "Read video file failed", err)
 	}
 
 	if len(coverBytes) == 0 {
-		return e.ErrFileRequired
+		return e.New(consts.StatusBadRequest, "Cover file is empty", nil)
 	}
 	if len(videoBytes) == 0 {
-		return e.ErrVideoRequired
+		return e.New(consts.StatusBadRequest, "Video file is empty", nil)
 	}
 
 	videoURL, coverURL, err := utils.StoreVideo(videoBytes, coverBytes, userID)
 	if err != nil {
-		return e.ErrFileSaveFailed
+		return e.New(consts.StatusInternalServerError, "Save video file failed", err)
 	}
 
 	_video := model.Video{
@@ -79,7 +79,7 @@ func (s *VideoService) PublishService(req *video.PublishReq, userID string, cove
 	}
 
 	if err := dao.CreateVideo(s.ctx, &_video); err != nil {
-		return e.ErrDB
+		return e.New(consts.StatusInternalServerError, "Create video failed", err)
 	}
 	return nil
 }
@@ -89,11 +89,11 @@ func (s *VideoService) ListService(req *video.ListReq, userID string) (error, *v
 
 	var _videoList []model.Video
 	if userID == "" {
-		return e.ErrUserIDNotFound, nil
+		return e.New(consts.StatusUnauthorized, "User ID not found", nil), nil
 	}
 
 	if err := dao.FindVideoByUserID(s.ctx, &_videoList, userID, offset, int(req.PageSize)); err != nil {
-		return e.ErrDB, nil
+		return e.New(consts.StatusInternalServerError, "Database error", err), nil
 	}
 
 	items := make([]*video.Item, 0)
@@ -124,7 +124,7 @@ func (s *VideoService) PopularService(req *video.PopularReq) (error, *video.Popu
 	var _videoList []model.Video
 
 	if err := dao.OrderPopular(s.ctx, &_videoList, offset, int(req.PageSize)); err != nil {
-		return e.ErrDB, nil
+		return e.New(consts.StatusInternalServerError, "Database error", err), nil
 	}
 	items := make([]*video.Item, 0)
 
@@ -155,14 +155,14 @@ func (s *VideoService) SearchService(req *video.SearchReq) (error, *video.Search
 	if req.Keyword != "" {
 		err := dao.SearchByKeyword(s.ctx, &_videoList, offset, int(req.PageSize), req.Keyword)
 		if err != nil {
-			return e.ErrDB, nil
+			return e.New(consts.StatusInternalServerError, "Database error", err), nil
 		}
 	}
 
 	if req.Username != "" {
 		err := dao.SearchByName(s.ctx, &_videoList, offset, int(req.PageSize), req.Username)
 		if err != nil {
-			return e.ErrDB, nil
+			return e.New(consts.StatusInternalServerError, "Database error", err), nil
 		}
 	}
 	items := make([]*video.Item, 0)
