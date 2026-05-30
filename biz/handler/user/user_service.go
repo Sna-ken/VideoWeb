@@ -64,7 +64,7 @@ func Login(ctx context.Context, c *app.RequestContext) {
 		var e *e.Error
 		if errors.As(err, &e) {
 			c.JSON(e.Code, &user.LoginResp{
-				Base: &user.Base{Code: int32(e.Code), Msg: "Login failed:" + e.Msg},
+				Base: &user.Base{Code: int32(e.Code), Msg: "User login failed:" + e.Msg},
 			})
 			return
 		}
