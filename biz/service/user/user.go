@@ -131,7 +131,7 @@ func (s *UserService) UserInfoService(req *user.UserInfoReq, userID string) (err
 	return nil, &user.UserInfoResp{
 		Base: &user.Base{
 			Code: consts.StatusOK,
-			Msg:  "user info fetched successfully",
+			Msg:  "User info fetched successfully",
 		},
 		Data: &user.Data{
 			UserID:    _user.ID,
